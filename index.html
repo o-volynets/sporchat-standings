@@ -8,9 +8,11 @@
     :root {
       --bg: #0f172a;
       --card: #111827;
+      --card-2: #1f2937;
       --text: #f9fafb;
       --muted: #9ca3af;
       --line: rgba(255, 255, 255, 0.12);
+      --accent: #38bdf8;
       --gold: #facc15;
       --silver: #d1d5db;
       --bronze: #fb923c;
@@ -58,12 +60,16 @@
       font-size: 16px;
     }
 
+    .status-card, .form-card, .table-card {
+      border: 1px solid var(--line);
+      background: rgba(17, 24, 39, 0.86);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+    }
+
     .status-card {
       min-width: 250px;
       padding: 16px 18px;
-      border: 1px solid var(--line);
       border-radius: 18px;
-      background: rgba(17, 24, 39, 0.78);
       backdrop-filter: blur(10px);
     }
 
@@ -76,14 +82,103 @@
       letter-spacing: 0.08em;
     }
 
-    #status { font-size: 14px; }
+    #status, #form-status { font-size: 14px; }
+
+    .form-card {
+      margin-bottom: 20px;
+      border-radius: 22px;
+      overflow: hidden;
+    }
+
+    .form-summary {
+      list-style: none;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 18px 20px;
+      background: rgba(31, 41, 55, 0.72);
+      border-bottom: 1px solid var(--line);
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .form-summary::-webkit-details-marker { display: none; }
+    .form-summary::after { content: '▾'; color: var(--muted); font-size: 18px; }
+    details[open] .form-summary::after { content: '▴'; }
+
+    .prediction-form {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1.4fr 0.9fr 0.7fr auto;
+      gap: 14px;
+      align-items: end;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    select, input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(15, 23, 42, 0.78);
+      color: var(--text);
+      padding: 12px 13px;
+      font-size: 15px;
+      outline: none;
+    }
+
+    select:focus, input:focus {
+      border-color: rgba(56, 189, 248, 0.75);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+    }
+
+    .button {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 12px 16px;
+      color: var(--text);
+      background: rgba(15, 23, 42, 0.7);
+      cursor: pointer;
+      font-weight: 800;
+      transition: 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .button:hover:not(:disabled) {
+      transform: translateY(-1px);
+      border-color: rgba(56, 189, 248, 0.6);
+    }
+
+    .button.primary {
+      background: linear-gradient(135deg, #0ea5e9, #22c55e);
+      border-color: rgba(255,255,255,0.18);
+    }
+
+    .button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .form-note {
+      grid-column: 1 / -1;
+      margin: -2px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
 
     .table-card {
       overflow: hidden;
       border-radius: 22px;
-      border: 1px solid var(--line);
-      background: rgba(17, 24, 39, 0.86);
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
     }
 
     .table-header {
@@ -97,23 +192,6 @@
     }
 
     .table-header strong { font-size: 18px; }
-
-    .refresh-button {
-      border: 1px solid var(--line);
-      border-radius: 999px;
-      padding: 10px 14px;
-      color: var(--text);
-      background: rgba(15, 23, 42, 0.7);
-      cursor: pointer;
-      font-weight: 600;
-      transition: 0.15s ease;
-    }
-
-    .refresh-button:hover {
-      transform: translateY(-1px);
-      border-color: rgba(56, 189, 248, 0.6);
-    }
-
     .table-scroll { overflow-x: auto; }
 
     table {
@@ -140,7 +218,6 @@
     }
 
     td { font-size: 15px; }
-
     tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
     tbody tr:last-child td { border-bottom: none; }
 
@@ -176,12 +253,18 @@
       line-height: 1.5;
     }
 
+    @media (max-width: 900px) {
+      .prediction-form { grid-template-columns: 1fr 1fr; }
+      .button.primary { width: 100%; }
+    }
+
     @media (max-width: 720px) {
       .page { width: min(100% - 20px, 1100px); padding-top: 20px; }
       .hero { flex-direction: column; align-items: stretch; }
       .status-card { min-width: 0; }
       .table-header { flex-direction: column; align-items: stretch; }
-      .refresh-button { width: 100%; }
+      .button { width: 100%; }
+      .prediction-form { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -193,15 +276,50 @@
         <p class="subtitle">Рейтинг учасників прогнозів</p>
       </div>
       <div class="status-card">
-        <span class="status-label">Статус</span>
+        <span class="status-label">Статус рейтингу</span>
         <div id="status">Завантаження рейтингу...</div>
       </div>
     </section>
 
+    <details class="form-card" open>
+      <summary class="form-summary">Зробити прогноз</summary>
+      <form id="prediction-form" class="prediction-form">
+        <label>
+          Обери матч
+          <select id="match-select" required></select>
+        </label>
+
+        <label>
+          Нік або Імʼя
+          <select id="player-select" required></select>
+        </label>
+
+        <label>
+          Введи рахунок
+          <input
+            id="score-input"
+            type="text"
+            inputmode="numeric"
+            placeholder="0-0"
+            maxlength="5"
+            pattern="\d{1,2}-\d{1,2}"
+            autocomplete="off"
+            required
+          />
+        </label>
+
+        <button id="submit-button" class="button primary" type="submit">Відправити</button>
+
+        <p class="form-note" id="form-status">
+          У списку матчів показуються найближчі 10 матчів від поточної дати.
+        </p>
+      </form>
+    </details>
+
     <section class="table-card">
       <div class="table-header">
         <strong>Турнірна таблиця</strong>
-        <button class="refresh-button" type="button" onclick="loadRating()">Оновити рейтинг</button>
+        <button class="button" type="button" onclick="loadRating()">Оновити рейтинг</button>
       </div>
       <div class="table-scroll">
         <table>
@@ -222,11 +340,89 @@
       </div>
     </section>
 
-    <p class="footer-note">Дані йдуть через Netlify Function proxy, тому мають працювати в Chrome, Safari та інших браузерах.</p>
+    <p class="footer-note">Дані йдуть через Netlify Function proxy. Прогнози записуються в лист “Відповіді на форму”.</p>
   </main>
 
   <script>
-    const API_URL = '/.netlify/functions/rating';
+    const RATING_API_URL = '/.netlify/functions/rating';
+    const SUBMIT_API_URL = '/.netlify/functions/submit-prediction';
+
+    const PLAYERS = ['Курт', 'Діді', 'Равік', 'Туріст', 'Ронні', 'Рос', 'Раміно', 'Лоску', 'Микита'];
+
+    const MATCHES = [
+      { date: '2026-06-11', match: 'Мексика - Південна Африка' },
+      { date: '2026-06-11', match: 'Південна Корея - Чехія' },
+      { date: '2026-06-12', match: 'Канада - Боснія і Герцеговина' },
+      { date: '2026-06-12', match: 'США - Парагвай' },
+      { date: '2026-06-13', match: 'Гаїті - Шотландія' },
+      { date: '2026-06-13', match: 'Австралія - Туреччина' },
+      { date: '2026-06-13', match: 'Бразилія - Марокко' },
+      { date: '2026-06-13', match: 'Катар - Швейцарія' },
+      { date: '2026-06-14', match: 'Німеччина - Кюрасао' },
+      { date: '2026-06-14', match: 'Кот-дʼІвуар - Еквадор' },
+      { date: '2026-06-14', match: 'Нідерланди - Японія' },
+      { date: '2026-06-14', match: 'Швеція - Туніс' },
+      { date: '2026-06-15', match: 'Іспанія - Кабо-Верде' },
+      { date: '2026-06-15', match: 'Бельгія - Єгипет' },
+      { date: '2026-06-15', match: 'Саудівська Аравія - Уругвай' },
+      { date: '2026-06-15', match: 'Іран - Нова Зеландія' },
+      { date: '2026-06-16', match: 'Франція - Сенегал' },
+      { date: '2026-06-16', match: 'Ірак - Норвегія' },
+      { date: '2026-06-16', match: 'Аргентина - Алжир' },
+      { date: '2026-06-16', match: 'Австрія - Йорданія' },
+      { date: '2026-06-17', match: 'Португалія - ДР Конго' },
+      { date: '2026-06-17', match: 'Узбекистан - Колумбія' },
+      { date: '2026-06-17', match: 'Англія - Хорватія' },
+      { date: '2026-06-17', match: 'Гана - Панама' },
+      { date: '2026-06-18', match: 'Чехія - Південна Африка' },
+      { date: '2026-06-18', match: 'Мексика - Південна Корея' },
+      { date: '2026-06-18', match: 'Швейцарія - Боснія і Герцеговина' },
+      { date: '2026-06-18', match: 'Канада - Катар' },
+      { date: '2026-06-19', match: 'США - Австралія' },
+      { date: '2026-06-19', match: 'Туреччина - Парагвай' },
+      { date: '2026-06-19', match: 'Шотландія - Марокко' },
+      { date: '2026-06-19', match: 'Бразилія - Гаїті' },
+      { date: '2026-06-20', match: 'Німеччина - Кот-дʼІвуар' },
+      { date: '2026-06-20', match: 'Еквадор - Кюрасао' },
+      { date: '2026-06-20', match: 'Нідерланди - Швеція' },
+      { date: '2026-06-20', match: 'Туніс - Японія' },
+      { date: '2026-06-21', match: 'Іспанія - Саудівська Аравія' },
+      { date: '2026-06-21', match: 'Уругвай - Кабо-Верде' },
+      { date: '2026-06-21', match: 'Бельгія - Іран' },
+      { date: '2026-06-21', match: 'Нова Зеландія - Єгипет' },
+      { date: '2026-06-22', match: 'Франція - Ірак' },
+      { date: '2026-06-22', match: 'Сенегал - Норвегія' },
+      { date: '2026-06-22', match: 'Аргентина - Австрія' },
+      { date: '2026-06-22', match: 'Алжир - Йорданія' },
+      { date: '2026-06-23', match: 'Португалія - Узбекистан' },
+      { date: '2026-06-23', match: 'Колумбія - ДР Конго' },
+      { date: '2026-06-23', match: 'Англія - Гана' },
+      { date: '2026-06-23', match: 'Панама - Хорватія' },
+      { date: '2026-06-24', match: 'Чехія - Мексика' },
+      { date: '2026-06-24', match: 'Південна Африка - Південна Корея' },
+      { date: '2026-06-24', match: 'Швейцарія - Канада' },
+      { date: '2026-06-24', match: 'Боснія і Герцеговина - Катар' },
+      { date: '2026-06-24', match: 'Шотландія - Бразилія' },
+      { date: '2026-06-24', match: 'Марокко - Гаїті' },
+      { date: '2026-06-25', match: 'Туреччина - США' },
+      { date: '2026-06-25', match: 'Парагвай - Австралія' },
+      { date: '2026-06-25', match: 'Кюрасао - Кот-дʼІвуар' },
+      { date: '2026-06-25', match: 'Еквадор - Німеччина' },
+      { date: '2026-06-25', match: 'Туніс - Нідерланди' },
+      { date: '2026-06-25', match: 'Японія - Швеція' },
+      { date: '2026-06-26', match: 'Сенегал - Ірак' },
+      { date: '2026-06-26', match: 'Норвегія - Франція' },
+      { date: '2026-06-26', match: 'Саудівська Аравія - Кабо-Верде' },
+      { date: '2026-06-26', match: 'Уругвай - Іспанія' },
+      { date: '2026-06-27', match: 'Нова Зеландія - Бельгія' },
+      { date: '2026-06-27', match: 'Єгипет - Іран' },
+      { date: '2026-06-27', match: 'Алжир - Австрія' },
+      { date: '2026-06-27', match: 'Аргентина - Йорданія' },
+      { date: '2026-06-27', match: 'Колумбія - Португалія' },
+      { date: '2026-06-27', match: 'ДР Конго - Узбекистан' },
+      { date: '2026-06-27', match: 'Панама - Англія' },
+      { date: '2026-06-27', match: 'Хорватія - Гана' }
+    ];
 
     function setStatus(message, type) {
       const status = document.getElementById('status');
@@ -234,6 +430,14 @@
       if (type === 'error') status.style.color = '#f87171';
       else if (type === 'success') status.style.color = '#34d399';
       else status.style.color = '#f9fafb';
+    }
+
+    function setFormStatus(message, type) {
+      const status = document.getElementById('form-status');
+      status.textContent = message;
+      if (type === 'error') status.style.color = '#f87171';
+      else if (type === 'success') status.style.color = '#34d399';
+      else status.style.color = '#9ca3af';
     }
 
     function formatNumber(value) {
@@ -247,15 +451,6 @@
       if (rank === 2) return 'rank-badge rank-2';
       if (rank === 3) return 'rank-badge rank-3';
       return 'rank-badge';
-    }
-
-    function escapeHtml(value) {
-      return String(value)
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
     }
 
     function renderTable(data) {
@@ -282,29 +477,150 @@
       });
     }
 
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
     async function loadRating() {
       setStatus('Завантаження рейтингу...');
-
       try {
-        const response = await fetch(API_URL, { cache: 'no-store' });
+        const response = await fetch(RATING_API_URL, { cache: 'no-store' });
         if (!response.ok) throw new Error('HTTP ' + response.status);
-
         const result = await response.json();
         if (!result || result.ok !== true) {
           throw new Error(result && result.error ? result.error : 'Невідома помилка');
         }
-
         const data = Array.isArray(result.data) ? result.data : [];
         renderTable(data);
         setStatus('Оновлено. Учасників: ' + data.length, 'success');
       } catch (error) {
-        console.error('Rating load error:', error);
+        console.error(error);
         renderTable([]);
-        setStatus('Помилка: не вдалося завантажити рейтинг через Netlify Function.', 'error');
+        setStatus('Помилка: не вдалося завантажити рейтинг.', 'error');
       }
     }
 
-    document.addEventListener('DOMContentLoaded', loadRating);
+    function formatMatchDate(dateString) {
+      const date = new Date(dateString + 'T12:00:00');
+      return date.toLocaleDateString('uk-UA', { day: '2-digit', month: '2-digit' });
+    }
+
+    function getUpcomingMatches(limit = 10) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      return MATCHES
+        .filter(item => new Date(item.date + 'T23:59:59') >= today)
+        .sort((a, b) => new Date(a.date) - new Date(b.date))
+        .slice(0, limit);
+    }
+
+    function populateForm() {
+      const matchSelect = document.getElementById('match-select');
+      const playerSelect = document.getElementById('player-select');
+
+      playerSelect.innerHTML = '<option value="">Обери гравця</option>';
+      PLAYERS.forEach(player => {
+        const option = document.createElement('option');
+        option.value = player;
+        option.textContent = player;
+        playerSelect.appendChild(option);
+      });
+
+      const upcomingMatches = getUpcomingMatches(10);
+      matchSelect.innerHTML = '<option value="">Обери матч</option>';
+
+      if (upcomingMatches.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = 'Немає доступних матчів';
+        matchSelect.appendChild(option);
+        matchSelect.disabled = true;
+        setFormStatus('Немає доступних матчів для прогнозу.', 'error');
+        return;
+      }
+
+      upcomingMatches.forEach(item => {
+        const option = document.createElement('option');
+        option.value = item.match;
+        option.textContent = `${formatMatchDate(item.date)} — ${item.match}`;
+        matchSelect.appendChild(option);
+      });
+    }
+
+    function normalizeScoreInput(value) {
+      let cleaned = value.replace(/[^0-9-]/g, '');
+      const firstDashIndex = cleaned.indexOf('-');
+
+      if (firstDashIndex !== -1) {
+        const before = cleaned.slice(0, firstDashIndex).replace(/-/g, '');
+        const after = cleaned.slice(firstDashIndex + 1).replace(/-/g, '');
+        cleaned = before + '-' + after;
+      }
+
+      return cleaned.slice(0, 5);
+    }
+
+    async function submitPrediction(event) {
+      event.preventDefault();
+
+      const submitButton = document.getElementById('submit-button');
+      const player = document.getElementById('player-select').value;
+      const match = document.getElementById('match-select').value;
+      const score = document.getElementById('score-input').value.trim();
+
+      if (!player || !match || !score) {
+        setFormStatus('Заповни всі поля перед відправкою.', 'error');
+        return;
+      }
+
+      if (!/^\d{1,2}-\d{1,2}$/.test(score)) {
+        setFormStatus('Рахунок має бути у форматі 0-0, 0-1, 4-9.', 'error');
+        return;
+      }
+
+      submitButton.disabled = true;
+      setFormStatus('Відправляю прогноз...', '');
+
+      try {
+        const response = await fetch(SUBMIT_API_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ player, match, score })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result || result.ok !== true) {
+          throw new Error(result && result.error ? result.error : 'Не вдалося зберегти прогноз');
+        }
+
+        setFormStatus(`Збережено: ${player}, ${match}, ${score}`, 'success');
+        document.getElementById('score-input').value = '';
+        await loadRating();
+      } catch (error) {
+        console.error(error);
+        setFormStatus('Помилка: ' + (error.message || String(error)), 'error');
+      } finally {
+        submitButton.disabled = false;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      populateForm();
+      loadRating();
+
+      document.getElementById('score-input').addEventListener('input', event => {
+        event.target.value = normalizeScoreInput(event.target.value);
+      });
+
+      document.getElementById('prediction-form').addEventListener('submit', submitPrediction);
+    });
   </script>
 </body>
 </html>
