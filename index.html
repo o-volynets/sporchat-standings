@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sportchat Predict — Рейтинг</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card: #111827;
+      --text: #f9fafb;
+      --muted: #9ca3af;
+      --line: rgba(255, 255, 255, 0.12);
+      --gold: #facc15;
+      --silver: #d1d5db;
+      --bronze: #fb923c;
+      --danger: #f87171;
+      --success: #34d399;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.12), transparent 28%),
+        var(--bg);
+      color: var(--text);
+    }
+
+    .page {
+      width: min(1100px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 48px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .status-card {
+      min-width: 250px;
+      padding: 16px 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(17, 24, 39, 0.78);
+      backdrop-filter: blur(10px);
+    }
+
+    .status-label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    #status { font-size: 14px; }
+
+    .table-card {
+      overflow: hidden;
+      border-radius: 22px;
+      border: 1px solid var(--line);
+      background: rgba(17, 24, 39, 0.86);
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(31, 41, 55, 0.72);
+    }
+
+    .table-header strong { font-size: 18px; }
+
+    .refresh-button {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 14px;
+      color: var(--text);
+      background: rgba(15, 23, 42, 0.7);
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.15s ease;
+    }
+
+    .refresh-button:hover {
+      transform: translateY(-1px);
+      border-color: rgba(56, 189, 248, 0.6);
+    }
+
+    .table-scroll { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 780px;
+    }
+
+    thead { background: rgba(15, 23, 42, 0.88); }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+    }
+
+    th {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    td { font-size: 15px; }
+
+    tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    .rank { width: 70px; font-weight: 800; }
+    .player { font-weight: 800; }
+    .number, th.number { text-align: right; font-variant-numeric: tabular-nums; }
+
+    .rank-badge {
+      display: inline-flex;
+      min-width: 34px;
+      height: 34px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      font-weight: 900;
+    }
+
+    .rank-1 { background: rgba(250, 204, 21, 0.18); color: var(--gold); border: 1px solid rgba(250, 204, 21, 0.45); }
+    .rank-2 { background: rgba(209, 213, 219, 0.16); color: var(--silver); border: 1px solid rgba(209, 213, 219, 0.38); }
+    .rank-3 { background: rgba(251, 146, 60, 0.16); color: var(--bronze); border: 1px solid rgba(251, 146, 60, 0.42); }
+
+    .empty {
+      padding: 32px 20px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .footer-note {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 720px) {
+      .page { width: min(100% - 20px, 1100px); padding-top: 20px; }
+      .hero { flex-direction: column; align-items: stretch; }
+      .status-card { min-width: 0; }
+      .table-header { flex-direction: column; align-items: stretch; }
+      .refresh-button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div>
+        <h1>Sportchat Predict</h1>
+        <p class="subtitle">Рейтинг учасників прогнозів</p>
+      </div>
+      <div class="status-card">
+        <span class="status-label">Статус</span>
+        <div id="status">Завантаження рейтингу...</div>
+      </div>
+    </section>
+
+    <section class="table-card">
+      <div class="table-header">
+        <strong>Турнірна таблиця</strong>
+        <button class="refresh-button" type="button" onclick="loadRating()">Оновити рейтинг</button>
+      </div>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Місце</th>
+              <th>Гравець</th>
+              <th class="number">Кількість ставок</th>
+              <th class="number">Бали</th>
+              <th class="number">Середня похибка</th>
+              <th class="number">Похибка на різниці забитих та пропущених</th>
+            </tr>
+          </thead>
+          <tbody id="rating-body">
+            <tr><td colspan="6" class="empty">Завантаження...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <p class="footer-note">Дані йдуть через Netlify Function proxy, тому мають працювати в Chrome, Safari та інших браузерах.</p>
+  </main>
+
+  <script>
+    const API_URL = '/.netlify/functions/rating';
+
+    function setStatus(message, type) {
+      const status = document.getElementById('status');
+      status.textContent = message;
+      if (type === 'error') status.style.color = '#f87171';
+      else if (type === 'success') status.style.color = '#34d399';
+      else status.style.color = '#f9fafb';
+    }
+
+    function formatNumber(value) {
+      const number = Number(value);
+      if (Number.isNaN(number)) return '0';
+      return number.toLocaleString('uk-UA', { maximumFractionDigits: 2 });
+    }
+
+    function getRankClass(rank) {
+      if (rank === 1) return 'rank-badge rank-1';
+      if (rank === 2) return 'rank-badge rank-2';
+      if (rank === 3) return 'rank-badge rank-3';
+      return 'rank-badge';
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById('rating-body');
+      tbody.innerHTML = '';
+
+      if (!Array.isArray(data) || data.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">Поки немає учасників для показу.</td></tr>';
+        return;
+      }
+
+      data.forEach((item, index) => {
+        const rank = index + 1;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="rank"><span class="${getRankClass(rank)}">${rank}</span></td>
+          <td class="player">${escapeHtml(item.player || '')}</td>
+          <td class="number">${formatNumber(item.bets)}</td>
+          <td class="number">${formatNumber(item.points)}</td>
+          <td class="number">${formatNumber(item.avgError)}</td>
+          <td class="number">${formatNumber(item.diffError)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadRating() {
+      setStatus('Завантаження рейтингу...');
+
+      try {
+        const response = await fetch(API_URL, { cache: 'no-store' });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+
+        const result = await response.json();
+        if (!result || result.ok !== true) {
+          throw new Error(result && result.error ? result.error : 'Невідома помилка');
+        }
+
+        const data = Array.isArray(result.data) ? result.data : [];
+        renderTable(data);
+        setStatus('Оновлено. Учасників: ' + data.length, 'success');
+      } catch (error) {
+        console.error('Rating load error:', error);
+        renderTable([]);
+        setStatus('Помилка: не вдалося завантажити рейтинг через Netlify Function.', 'error');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', loadRating);
+  </script>
+</body>
+</html>
