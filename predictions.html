@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Sportchat Predict — Перевірити прогнози</title>
+  <title>Sportchat Predict — Не зроблені прогнози</title>
   <style>
     :root {
       --bg: #0f172a;
@@ -176,10 +176,7 @@
       border-color: rgba(56, 189, 248, 0.6);
     }
 
-    .button:disabled {
-      opacity: 0.55;
-      cursor: not-allowed;
-    }
+    .button:disabled { opacity: 0.55; cursor: not-allowed; }
 
     .form-note {
       grid-column: 1 / -1;
@@ -189,10 +186,7 @@
       line-height: 1.45;
     }
 
-    .table-card {
-      overflow: hidden;
-      border-radius: 22px;
-    }
+    .table-card { overflow: hidden; border-radius: 22px; }
 
     .table-header {
       display: flex;
@@ -207,12 +201,7 @@
     .table-header strong { font-size: 18px; }
     .table-scroll { overflow-x: auto; }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 620px;
-    }
-
+    table { width: 100%; border-collapse: collapse; min-width: 620px; }
     thead { background: rgba(15, 23, 42, 0.88); }
 
     th, td {
@@ -234,12 +223,7 @@
     tbody tr:hover { background: rgba(255, 255, 255, 0.04); }
     tbody tr:last-child td { border-bottom: none; }
 
-    .empty {
-      padding: 32px 20px;
-      color: var(--muted);
-      text-align: center;
-    }
-
+    .empty { padding: 32px 20px; color: var(--muted); text-align: center; }
     .match-name { font-weight: 800; }
     .muted { color: var(--muted); }
 
@@ -265,7 +249,7 @@
     <section class="hero">
       <div>
         <h1>Sportchat Predict</h1>
-        <p class="subtitle">Перевірка матчів, на які гравець уже зробив прогноз</p>
+        <p class="subtitle">Перевірка найближчих матчів, на які гравець ще не зробив прогноз</p>
       </div>
       <div class="status-card">
         <span class="status-label">Статус</span>
@@ -275,36 +259,36 @@
 
     <nav class="nav" aria-label="Навігація сайту">
       <a class="nav-link" href="index.html">Рейтинг</a>
-      <a class="nav-link active" href="predictions.html">Перевірити прогнози</a>
+      <a class="nav-link active" href="predictions.html">Не зроблені прогнози</a>
     </nav>
 
     <section class="form-card">
-      <div class="section-title">Перевірити прогнози гравця</div>
+      <div class="section-title">Перевірити, на які матчі ще немає прогнозу</div>
       <form id="checker-form" class="checker-form">
         <label>
           Нік або Імʼя
           <select id="player-select" required></select>
         </label>
 
-        <button id="load-button" class="button" type="submit">Показати матчі</button>
+        <button id="load-button" class="button" type="submit">Показати пропущені матчі</button>
 
         <p class="form-note">
-          На цій сторінці показуються тільки матчі, на які гравець уже зробив прогноз. Сам рахунок прогнозу не відображається.
+          На цій сторінці показуються тільки матчі з найближчих 10 матчів ЧС-2026, на які обраний гравець ще не зробив прогноз. Рахунки прогнозів не відображаються.
         </p>
       </form>
     </section>
 
     <section class="table-card">
       <div class="table-header">
-        <strong id="table-title">Матчі гравця</strong>
+        <strong id="table-title">Найближчі матчі без прогнозу</strong>
       </div>
       <div class="table-scroll">
         <table>
           <thead>
             <tr>
               <th>#</th>
+              <th>Дата</th>
               <th>Матч</th>
-              <th>Коли відправлено</th>
             </tr>
           </thead>
           <tbody id="predictions-body">
@@ -314,12 +298,87 @@
       </div>
     </section>
 
-    <p class="footer-note">Сторінка не показує рахунки прогнозів — лише факт, що прогноз на матч уже зроблено.</p>
+    <p class="footer-note">Сторінка звіряє найближчі 10 матчів із уже відправленими прогнозами обраного гравця й показує тільки ті матчі, де прогнозу ще немає.</p>
   </main>
 
   <script>
     const PLAYER_PREDICTIONS_API_URL = '/.netlify/functions/player-predictions';
     const PLAYERS = ['Курт', 'Діді', 'Равік', 'Туріст', 'Ронні', 'Рос', 'Раміно', 'Лоску', 'Микита'];
+
+    const MATCHES = [
+      { date: '2026-06-11', match: 'Мексика - Південна Африка' },
+      { date: '2026-06-11', match: 'Південна Корея - Чехія' },
+      { date: '2026-06-12', match: 'Канада - Боснія і Герцеговина' },
+      { date: '2026-06-12', match: 'США - Парагвай' },
+      { date: '2026-06-13', match: 'Гаїті - Шотландія' },
+      { date: '2026-06-13', match: 'Австралія - Туреччина' },
+      { date: '2026-06-13', match: 'Бразилія - Марокко' },
+      { date: '2026-06-13', match: 'Катар - Швейцарія' },
+      { date: '2026-06-14', match: 'Німеччина - Кюрасао' },
+      { date: '2026-06-14', match: 'Кот-дʼІвуар - Еквадор' },
+      { date: '2026-06-14', match: 'Нідерланди - Японія' },
+      { date: '2026-06-14', match: 'Швеція - Туніс' },
+      { date: '2026-06-15', match: 'Іспанія - Кабо-Верде' },
+      { date: '2026-06-15', match: 'Бельгія - Єгипет' },
+      { date: '2026-06-15', match: 'Саудівська Аравія - Уругвай' },
+      { date: '2026-06-15', match: 'Іран - Нова Зеландія' },
+      { date: '2026-06-16', match: 'Франція - Сенегал' },
+      { date: '2026-06-16', match: 'Ірак - Норвегія' },
+      { date: '2026-06-16', match: 'Аргентина - Алжир' },
+      { date: '2026-06-16', match: 'Австрія - Йорданія' },
+      { date: '2026-06-17', match: 'Португалія - ДР Конго' },
+      { date: '2026-06-17', match: 'Узбекистан - Колумбія' },
+      { date: '2026-06-17', match: 'Англія - Хорватія' },
+      { date: '2026-06-17', match: 'Гана - Панама' },
+      { date: '2026-06-18', match: 'Чехія - Південна Африка' },
+      { date: '2026-06-18', match: 'Мексика - Південна Корея' },
+      { date: '2026-06-18', match: 'Швейцарія - Боснія і Герцеговина' },
+      { date: '2026-06-18', match: 'Канада - Катар' },
+      { date: '2026-06-19', match: 'США - Австралія' },
+      { date: '2026-06-19', match: 'Туреччина - Парагвай' },
+      { date: '2026-06-19', match: 'Шотландія - Марокко' },
+      { date: '2026-06-19', match: 'Бразилія - Гаїті' },
+      { date: '2026-06-20', match: 'Німеччина - Кот-дʼІвуар' },
+      { date: '2026-06-20', match: 'Еквадор - Кюрасао' },
+      { date: '2026-06-20', match: 'Нідерланди - Швеція' },
+      { date: '2026-06-20', match: 'Туніс - Японія' },
+      { date: '2026-06-21', match: 'Іспанія - Саудівська Аравія' },
+      { date: '2026-06-21', match: 'Уругвай - Кабо-Верде' },
+      { date: '2026-06-21', match: 'Бельгія - Іран' },
+      { date: '2026-06-21', match: 'Нова Зеландія - Єгипет' },
+      { date: '2026-06-22', match: 'Франція - Ірак' },
+      { date: '2026-06-22', match: 'Сенегал - Норвегія' },
+      { date: '2026-06-22', match: 'Аргентина - Австрія' },
+      { date: '2026-06-22', match: 'Алжир - Йорданія' },
+      { date: '2026-06-23', match: 'Португалія - Узбекистан' },
+      { date: '2026-06-23', match: 'Колумбія - ДР Конго' },
+      { date: '2026-06-23', match: 'Англія - Гана' },
+      { date: '2026-06-23', match: 'Панама - Хорватія' },
+      { date: '2026-06-24', match: 'Чехія - Мексика' },
+      { date: '2026-06-24', match: 'Південна Африка - Південна Корея' },
+      { date: '2026-06-24', match: 'Швейцарія - Канада' },
+      { date: '2026-06-24', match: 'Боснія і Герцеговина - Катар' },
+      { date: '2026-06-24', match: 'Шотландія - Бразилія' },
+      { date: '2026-06-24', match: 'Марокко - Гаїті' },
+      { date: '2026-06-25', match: 'Туреччина - США' },
+      { date: '2026-06-25', match: 'Парагвай - Австралія' },
+      { date: '2026-06-25', match: 'Кюрасао - Кот-дʼІвуар' },
+      { date: '2026-06-25', match: 'Еквадор - Німеччина' },
+      { date: '2026-06-25', match: 'Туніс - Нідерланди' },
+      { date: '2026-06-25', match: 'Японія - Швеція' },
+      { date: '2026-06-26', match: 'Сенегал - Ірак' },
+      { date: '2026-06-26', match: 'Норвегія - Франція' },
+      { date: '2026-06-26', match: 'Саудівська Аравія - Кабо-Верде' },
+      { date: '2026-06-26', match: 'Уругвай - Іспанія' },
+      { date: '2026-06-27', match: 'Нова Зеландія - Бельгія' },
+      { date: '2026-06-27', match: 'Єгипет - Іран' },
+      { date: '2026-06-27', match: 'Алжир - Австрія' },
+      { date: '2026-06-27', match: 'Аргентина - Йорданія' },
+      { date: '2026-06-27', match: 'Колумбія - Португалія' },
+      { date: '2026-06-27', match: 'ДР Конго - Узбекистан' },
+      { date: '2026-06-27', match: 'Панама - Англія' },
+      { date: '2026-06-27', match: 'Хорватія - Гана' }
+    ];
 
     function setStatus(message, type) {
       const status = document.getElementById('status');
@@ -338,6 +397,44 @@
         .replaceAll("'", '&#039;');
     }
 
+    function formatDate(dateString) {
+      const [year, month, day] = String(dateString).split('-');
+      if (!year || !month || !day) return dateString;
+      return `${day}.${month}.${year}`;
+    }
+
+    function todayLocalIsoDate() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    function getNextTenMatches() {
+      const today = todayLocalIsoDate();
+      return MATCHES
+        .filter(item => item.date >= today)
+        .slice(0, 10);
+    }
+
+    function normalizeMatch(value) {
+      return String(value || '')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    function getMissingMatchesFromNextTen(existingPredictions) {
+      const submittedMatches = new Set(
+        (Array.isArray(existingPredictions) ? existingPredictions : [])
+          .map(item => normalizeMatch(item.match))
+          .filter(Boolean)
+      );
+
+      return getNextTenMatches()
+        .filter(item => !submittedMatches.has(normalizeMatch(item.match)));
+    }
+
     function populatePlayers() {
       const playerSelect = document.getElementById('player-select');
       playerSelect.innerHTML = '<option value="">Обери гравця</option>';
@@ -350,23 +447,23 @@
       });
     }
 
-    function renderPredictions(player, data) {
+    function renderMissingMatches(player, missingMatches, totalNextMatches) {
       const tbody = document.getElementById('predictions-body');
       const tableTitle = document.getElementById('table-title');
       tbody.innerHTML = '';
-      tableTitle.textContent = player ? `Матчі гравця: ${player}` : 'Матчі гравця';
+      tableTitle.textContent = player ? `Немає прогнозу: ${player}` : 'Найближчі матчі без прогнозу';
 
-      if (!Array.isArray(data) || data.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="empty">У цього гравця поки немає прогнозів.</td></tr>';
+      if (!Array.isArray(missingMatches) || missingMatches.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="3" class="empty">${player ? 'Готово: на всі найближчі ' + totalNextMatches + ' матчів прогноз уже зроблено.' : 'Обери гравця у списку вище.'}</td></tr>`;
         return;
       }
 
-      data.forEach((item, index) => {
+      missingMatches.forEach((item, index) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td class="muted">${index + 1}</td>
+          <td class="muted">${escapeHtml(formatDate(item.date))}</td>
           <td class="match-name">${escapeHtml(item.match || '')}</td>
-          <td class="muted">${escapeHtml(item.submittedAt || '')}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -377,12 +474,12 @@
 
       if (!player) {
         setStatus('Спочатку обери гравця.', 'error');
-        renderPredictions('', []);
+        renderMissingMatches('', [], 0);
         return;
       }
 
       button.disabled = true;
-      setStatus('Завантаження матчів...');
+      setStatus('Завантаження перевірки...');
 
       try {
         const response = await fetch(`${PLAYER_PREDICTIONS_API_URL}?player=${encodeURIComponent(player)}`, {
@@ -392,16 +489,19 @@
         const result = await response.json();
 
         if (!response.ok || !result || result.ok !== true) {
-          throw new Error(result && result.error ? result.error : 'Не вдалося завантажити матчі');
+          throw new Error(result && result.error ? result.error : 'Не вдалося завантажити дані');
         }
 
-        const data = Array.isArray(result.data) ? result.data : [];
-        renderPredictions(player, data);
-        setStatus(`Оновлено. Матчів: ${data.length}`, 'success');
+        const existingPredictions = Array.isArray(result.data) ? result.data : [];
+        const nextTen = getNextTenMatches();
+        const missingMatches = getMissingMatchesFromNextTen(existingPredictions);
+
+        renderMissingMatches(player, missingMatches, nextTen.length);
+        setStatus(`Оновлено. Без прогнозу: ${missingMatches.length} з ${nextTen.length} найближчих матчів`, 'success');
 
       } catch (error) {
         console.error(error);
-        renderPredictions(player, []);
+        renderMissingMatches(player, [], 0);
         setStatus('Помилка: ' + (error.message || String(error)), 'error');
 
       } finally {
