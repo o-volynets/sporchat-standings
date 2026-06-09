@@ -2,7 +2,12 @@ const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoRxDW_AcGE__8
 
 exports.handler = async function () {
   try {
-    const response = await fetch(APPS_SCRIPT_URL);
+    const response = await fetch(APPS_SCRIPT_URL, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
 
     if (!response.ok) {
       throw new Error(`Apps Script returned ${response.status}`);
@@ -10,25 +15,22 @@ exports.handler = async function () {
 
     const data = await response.json();
 
-    return {
-      statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify(data)
-    };
+    return jsonResponse(200, data);
   } catch (error) {
-    return {
-      statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify({
-        ok: false,
-        error: error.message || String(error)
-      })
-    };
+    return jsonResponse(500, {
+      ok: false,
+      error: error.message || String(error)
+    });
   }
 };
+
+function jsonResponse(statusCode, body) {
+  return {
+    statusCode,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Access-Control-Allow-Origin': '*'
+    },
+    body: JSON.stringify(body)
+  };
+}
