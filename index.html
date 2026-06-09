@@ -60,6 +60,37 @@
       font-size: 16px;
     }
 
+    .nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin: 18px 0 24px;
+    }
+
+    .nav-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 14px;
+      color: var(--text);
+      background: rgba(15, 23, 42, 0.7);
+      text-decoration: none;
+      font-weight: 800;
+      transition: 0.15s ease;
+    }
+
+    .nav-link:hover {
+      transform: translateY(-1px);
+      border-color: rgba(56, 189, 248, 0.6);
+    }
+
+    .nav-link.active {
+      background: linear-gradient(135deg, rgba(14, 165, 233, 0.6), rgba(34, 197, 94, 0.6));
+      border-color: rgba(255,255,255,0.18);
+    }
+
     .status-card, .form-card, .table-card {
       border: 1px solid var(--line);
       background: rgba(17, 24, 39, 0.86);
@@ -280,6 +311,11 @@
         <div id="status">Завантаження рейтингу...</div>
       </div>
     </section>
+
+    <nav class="nav" aria-label="Навігація сайту">
+      <a class="nav-link active" href="index.html">Рейтинг</a>
+      <a class="nav-link" href="predictions.html">Перевірити прогнози</a>
+    </nav>
 
     <details class="form-card" open>
       <summary class="form-summary">Зробити прогноз</summary>
