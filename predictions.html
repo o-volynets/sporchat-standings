@@ -420,8 +420,16 @@
 
     function normalizeMatch(value) {
       return String(value || '')
+        .normalize('NFKC')
+        // Різні типи апострофів: Кот-дʼІвуар / Кот-д’Івуар / Кот-д'Івуар
+        .replace(/[’ʼ‘`´ʹ]/g, "'")
+        // Різні типи дефісів/тире приводимо до звичайного дефіса
+        .replace(/[‐‑‒–—−]/g, '-')
+        // Прибираємо зайві пробіли навколо дефіса
+        .replace(/\s*-\s*/g, '-')
         .replace(/\s+/g, ' ')
-        .trim();
+        .trim()
+        .toLowerCase();
     }
 
     function getMissingMatchesFromNextTen(existingPredictions) {
