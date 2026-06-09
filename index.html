@@ -299,11 +299,13 @@
           <input
             id="score-input"
             type="text"
-            inputmode="numeric"
+            inputmode="text"
             placeholder="0-0"
             maxlength="5"
             pattern="\d{1,2}-\d{1,2}"
             autocomplete="off"
+            autocapitalize="off"
+            spellcheck="false"
             required
           />
         </label>
@@ -457,6 +459,20 @@
       const tbody = document.getElementById('rating-body');
       tbody.innerHTML = '';
 
+      // Дублюємо сортування на фронтенді, щоб таблиця лишалась правильною
+      // навіть якщо API колись поверне дані без сортування.
+      if (Array.isArray(data)) {
+        data = data.slice().sort((a, b) => {
+          const pointsDiff = Number(b.points || 0) - Number(a.points || 0);
+          if (pointsDiff !== 0) return pointsDiff;
+
+          const avgErrorDiff = Number(a.avgError || 0) - Number(b.avgError || 0);
+          if (avgErrorDiff !== 0) return avgErrorDiff;
+
+          return Number(a.diffError || 0) - Number(b.diffError || 0);
+        });
+      }
+
       if (!Array.isArray(data) || data.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6" class="empty">Поки немає учасників для показу.</td></tr>';
         return;
@@ -554,7 +570,9 @@
     }
 
     function normalizeScoreInput(value) {
-      let cleaned = value.replace(/[^0-9-]/g, '');
+      // На мобільних браузерах користувач може ввести різні типи тире.
+      // Приводимо їх до звичайного дефіса, а все зайве видаляємо.
+      let cleaned = value.replace(/[–—−]/g, '-').replace(/[^0-9-]/g, '');
       const firstDashIndex = cleaned.indexOf('-');
 
       if (firstDashIndex !== -1) {
