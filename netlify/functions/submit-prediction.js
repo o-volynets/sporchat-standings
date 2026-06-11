@@ -1,6 +1,14 @@
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoRxDW_AcGE__86CzrW8CEMPyPgWuBCqgQm98qNkbtPrcvdfAbSRUklRkEkkSNHk8JlQ/exec';
 
 exports.handler = async function (event) {
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204,
+      headers: corsHeaders(),
+      body: ''
+    };
+  }
+
   if (event.httpMethod !== 'POST') {
     return jsonResponse(405, {
       ok: false,
@@ -13,7 +21,10 @@ exports.handler = async function (event) {
 
     const player = String(body.player || '').trim();
     const match = String(body.match || '').trim();
-    const score = String(body.score || '').trim();
+    const score = String(body.score || '')
+      .trim()
+      .replace(/[–—−]/g, '-')
+      .replace(/\s+/g, '');
 
     if (!player || !match || !score) {
       return jsonResponse(400, {
@@ -22,41 +33,42 @@ exports.handler = async function (event) {
       });
     }
 
-    if (!/^\d+\s*-\s*\d+$/.test(score)) {
+    if (!/^\d{1,2}-\d{1,2}$/.test(score)) {
       return jsonResponse(400, {
         ok: false,
-        error: 'Рахунок має бути у форматі 0-0, 1-2, 4-9'
+        error: 'Рахунок має бути у форматі 0-0, 1-2, 10-9'
       });
     }
 
-    const response = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
+    // Пишемо через GET до Apps Script, бо цей шлях стабільніше повертає JSON у зв'язці Netlify → Apps Script.
+    const url = new URL(APPS_SCRIPT_URL);
+    url.searchParams.set('action', 'submitPrediction');
+    url.searchParams.set('player', player);
+    url.searchParams.set('match', match);
+    url.searchParams.set('score', score);
+
+    const response = await fetch(url.toString(), {
+      method: 'GET',
       headers: {
-        'Content-Type': 'text/plain;charset=utf-8'
-      },
-      body: JSON.stringify({
-        action: 'submitPrediction',
-        player,
-        match,
-        score
-      })
+        'Accept': 'application/json'
+      }
     });
 
     const text = await response.text();
 
     let data;
-
     try {
       data = JSON.parse(text);
     } catch (error) {
       return jsonResponse(502, {
         ok: false,
         error: 'Apps Script повернув не JSON',
-        preview: text.slice(0, 200)
+        status: response.status,
+        preview: text.slice(0, 300)
       });
     }
 
-    return jsonResponse(response.ok ? 200 : 500, data);
+    return jsonResponse(data.ok ? 200 : 400, data);
 
   } catch (error) {
     return jsonResponse(500, {
@@ -66,15 +78,21 @@ exports.handler = async function (event) {
   }
 };
 
-function jsonResponse(statusCode, data) {
+function corsHeaders() {
+  return {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS'
+  };
+}
+
+function jsonResponse(statusCode, body) {
   return {
     statusCode,
     headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS'
+      ...corsHeaders(),
+      'Content-Type': 'application/json; charset=utf-8'
     },
-    body: JSON.stringify(data)
+    body: JSON.stringify(body)
   };
 }
