@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sportchat Predict — Особистий кабінет</title>
+  <style>
+    :root {
+      --bg:#0f172a; --card:#111827; --card2:#1f2937; --text:#f9fafb; --muted:#9ca3af;
+      --line:rgba(255,255,255,.12); --success:#34d399; --danger:#f87171; --warning:#facc15;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top left,rgba(56,189,248,.18),transparent 30%),radial-gradient(circle at bottom right,rgba(34,197,94,.12),transparent 28%),var(--bg);color:var(--text)}
+    .page{width:min(1100px,calc(100% - 32px));margin:0 auto;padding:32px 0 48px}
+    .hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:20px}
+    h1{margin:0;font-size:clamp(28px,4vw,48px);line-height:1.05;letter-spacing:-.04em}.subtitle{margin:8px 0 0;color:var(--muted);font-size:16px}
+    .nav{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 22px}.nav-link{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border:1px solid var(--line);border-radius:999px;color:var(--text);text-decoration:none;font-weight:800;background:rgba(15,23,42,.65)}
+    .nav-link.active{background:linear-gradient(135deg,#06b6d4,#22c55e);border:0}.card{border:1px solid var(--line);background:rgba(17,24,39,.9);border-radius:22px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.25);margin-bottom:22px}.card-header{padding:18px 22px;border-bottom:1px solid var(--line);background:rgba(31,41,55,.65);font-weight:900;font-size:20px}.card-body{padding:22px}
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px} label{display:block;margin-bottom:8px;color:var(--muted);font-weight:800;font-size:14px}
+    select,input{width:100%;border:1px solid var(--line);background:rgba(15,23,42,.8);color:var(--text);border-radius:14px;padding:14px 16px;font-size:16px;outline:none}
+    select:focus,input:focus{border-color:rgba(56,189,248,.7)} input:disabled,select:disabled{opacity:.65;cursor:not-allowed}
+    .actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:18px} button{border:1px solid var(--line);border-radius:999px;padding:13px 18px;font-weight:900;color:#fff;cursor:pointer;background:rgba(15,23,42,.75)}
+    button:disabled{opacity:.55;cursor:not-allowed}.primary{background:linear-gradient(135deg,#06b6d4,#22c55e);border:0;min-width:180px}
+    .status{margin-top:14px;font-weight:700;color:var(--muted)}.status.error{color:var(--danger)}.status.success{color:var(--success)}.status.warning{color:var(--warning)}
+    .info-box{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:16px;background:rgba(15,23,42,.55);color:var(--muted);line-height:1.5}.score-big{font-size:30px;font-weight:950;color:var(--text);margin:8px 0}.hidden{display:none!important}
+    @media(max-width:760px){.hero{flex-direction:column;align-items:stretch}.grid{grid-template-columns:1fr}.page{width:min(100% - 20px,1100px);padding-top:20px}.nav-link{flex:1}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div>
+        <h1>Особистий кабінет</h1>
+        <p class="subtitle">Перегляд і редагування твоїх прогнозів до старту матчу</p>
+      </div>
+    </section>
+
+    <nav class="nav">
+      <a class="nav-link" href="index.html">Рейтинг</a>
+      <a class="nav-link" href="predictions.html">Не зроблені прогнози</a>
+      <a class="nav-link active" href="personal-cabinet.html">Особистий кабінет</a>
+      <a class="nav-link" href="admin-results.html">Адмінка</a>
+    </nav>
+
+    <section class="card">
+      <div class="card-header">Мої прогнози</div>
+      <div class="card-body">
+        <div class="grid">
+          <div>
+            <label for="player-select">Нік або Імʼя</label>
+            <select id="player-select">
+              <option value="">Обери себе</option>
+              <option>Курт</option>
+              <option>Діді</option>
+              <option>Равік</option>
+              <option>Туріст</option>
+              <option>Ронні</option>
+              <option>Рос</option>
+              <option>Раміно</option>
+              <option>Лоску</option>
+              <option>Микита</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="match-select">Матч</label>
+            <select id="match-select" disabled>
+              <option value="">Спочатку обери гравця</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="score-input">Рахунок</label>
+            <input id="score-input" placeholder="2-1" inputmode="text" pattern="[0-9]+-[0-9]+" maxlength="5" disabled />
+          </div>
+        </div>
+
+        <div id="prediction-info" class="info-box hidden"></div>
+
+        <div class="actions">
+          <button id="save-button" class="primary" type="button" disabled>Зберегти прогноз</button>
+          <button id="refresh-button" type="button" disabled>Оновити</button>
+        </div>
+
+        <div id="status" class="status"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const playerSelect = document.getElementById('player-select');
+    const matchSelect = document.getElementById('match-select');
+    const scoreInput = document.getElementById('score-input');
+    const saveButton = document.getElementById('save-button');
+    const refreshButton = document.getElementById('refresh-button');
+    const statusEl = document.getElementById('status');
+    const predictionInfo = document.getElementById('prediction-info');
+
+    let cabinetRows = [];
+
+    function setStatus(message, type) {
+      statusEl.textContent = message || '';
+      statusEl.className = 'status' + (type ? ' ' + type : '');
+    }
+
+    function formatDate(value) {
+      if (!value) return 'Дата не вказана';
+      return new Intl.DateTimeFormat('uk-UA', {
+        timeZone: 'Europe/Kyiv',
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(new Date(value));
+    }
+
+    function selectedRow() {
+      return cabinetRows.find(row => row.match === matchSelect.value);
+    }
+
+    async function loadCabinet() {
+      const player = playerSelect.value;
+
+      cabinetRows = [];
+      matchSelect.innerHTML = '<option value="">Завантаження...</option>';
+      matchSelect.disabled = true;
+      scoreInput.value = '';
+      scoreInput.disabled = true;
+      saveButton.disabled = true;
+      refreshButton.disabled = !player;
+      predictionInfo.classList.add('hidden');
+
+      if (!player) {
+        matchSelect.innerHTML = '<option value="">Спочатку обери гравця</option>';
+        setStatus('', '');
+        return;
+      }
+
+      setStatus('Завантажую особистий кабінет...', '');
+
+      try {
+        const response = await fetch('/.netlify/functions/player-cabinet?player=' + encodeURIComponent(player));
+        const result = await response.json();
+
+        if (!response.ok || !result.ok) {
+          throw new Error(result.error || 'Не вдалося завантажити особистий кабінет');
+        }
+
+        cabinetRows = result.data || [];
+
+        matchSelect.innerHTML = '<option value="">Обери матч</option>';
+
+        cabinetRows.forEach(row => {
+          const option = document.createElement('option');
+          option.value = row.match;
+
+          const flags = [];
+          if (row.hasPrediction) flags.push('є прогноз');
+          if (!row.editable) flags.push('матч почався');
+
+          option.textContent = `${formatDate(row.startsAt)} — ${row.match}${flags.length ? ' · ' + flags.join(', ') : ''}`;
+          matchSelect.appendChild(option);
+        });
+
+        matchSelect.disabled = false;
+        setStatus('Дані завантажено.', 'success');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    function updateSelectedMatch() {
+      const row = selectedRow();
+
+      scoreInput.value = '';
+      scoreInput.disabled = true;
+      saveButton.disabled = true;
+      predictionInfo.classList.add('hidden');
+
+      if (!row) return;
+
+      predictionInfo.classList.remove('hidden');
+
+      const existing = row.hasPrediction
+        ? `<div>Твій поточний прогноз:</div><div class="score-big">${row.score}</div>`
+        : '<div>На цей матч ще немає прогнозу.</div>';
+
+      const editMessage = row.editable
+        ? '<div>Матч ще не почався — прогноз можна додати або змінити.</div>'
+        : '<div>Матч уже почався — прогноз доступний тільки для перегляду, редагування заблоковано.</div>';
+
+      predictionInfo.innerHTML = `${existing}<div>Початок: ${formatDate(row.startsAt)}</div>${editMessage}`;
+
+      if (row.hasPrediction) {
+        scoreInput.value = row.score || '';
+      }
+
+      if (row.editable) {
+        scoreInput.disabled = false;
+        saveButton.disabled = false;
+      }
+    }
+
+    async function savePrediction() {
+      const player = playerSelect.value;
+      const row = selectedRow();
+      const score = scoreInput.value.trim();
+
+      if (!player || !row) {
+        setStatus('Обери гравця і матч.', 'error');
+        return;
+      }
+
+      if (!/^\d+\s*-\s*\d+$/.test(score)) {
+        setStatus('Рахунок має бути у форматі 0-0, 2-1, 4-3.', 'error');
+        return;
+      }
+
+      if (!row.editable) {
+        setStatus('Матч уже почався, редагування заблоковано.', 'error');
+        return;
+      }
+
+      setStatus('Зберігаю прогноз...', '');
+
+      try {
+        const response = await fetch('/.netlify/functions/submit-prediction', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            player,
+            match: row.match,
+            score
+          })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.ok) {
+          throw new Error(result.error || 'Не вдалося зберегти прогноз');
+        }
+
+        setStatus('Прогноз збережено.', 'success');
+        await loadCabinet();
+        matchSelect.value = row.match;
+        updateSelectedMatch();
+      } catch (error) {
+        setStatus(error.message, 'error');
+      }
+    }
+
+    playerSelect.addEventListener('change', loadCabinet);
+    matchSelect.addEventListener('change', updateSelectedMatch);
+    saveButton.addEventListener('click', savePrediction);
+    refreshButton.addEventListener('click', loadCabinet);
+
+    const savedPlayer = localStorage.getItem('sportchat_player');
+    if (savedPlayer) {
+      playerSelect.value = savedPlayer;
+      loadCabinet();
+    }
+
+    playerSelect.addEventListener('change', () => {
+      if (playerSelect.value) {
+        localStorage.setItem('sportchat_player', playerSelect.value);
+      }
+    });
+  </script>
+</body>
+</html>
