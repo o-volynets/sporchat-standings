@@ -1,0 +1,10 @@
+{
+  "name": "sportchat-predict-supabase",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "dev": "netlify dev"
+  },
+  "dependencies": {}
+}
