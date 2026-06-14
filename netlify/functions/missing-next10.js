@@ -7,16 +7,22 @@ exports.handler = async function (event) {
   }
 
   try {
-    const data = await supabaseFetch('/rest/v1/leaderboard?select=player,bets,points,avg_error,diff_error&order=points.desc,avg_error.asc,diff_error.asc');
+    const player = String((event.queryStringParameters || {}).player || '').trim();
+
+    if (!player) {
+      return jsonResponse(400, { ok: false, error: 'Не вказано гравця' });
+    }
+
+    const data = await supabaseFetch('/rest/v1/rpc/missing_next10', {
+      method: 'POST',
+      body: JSON.stringify({ p_player: player })
+    });
 
     return jsonResponse(200, {
       ok: true,
-      data: data.map(row => ({
-        player: row.player,
-        bets: Number(row.bets || 0),
-        points: Number(row.points || 0),
-        avgError: Number(row.avg_error || 0),
-        diffError: Number(row.diff_error || 0)
+      data: (data || []).map(row => ({
+        match: row.match_name,
+        startsAt: row.starts_at
       }))
     });
   } catch (error) {
