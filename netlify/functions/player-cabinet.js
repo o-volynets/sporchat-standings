@@ -1,4 +1,5 @@
 const { jsonResponse, supabaseFetch } = require('./_supabase');
+const { verifyPlayerRequest } = require('./_playerAuth');
 
 exports.handler = async function (event) {
   if (event.httpMethod === 'OPTIONS') return jsonResponse(204, {});
@@ -6,12 +7,11 @@ exports.handler = async function (event) {
     return jsonResponse(405, { ok: false, error: 'Method not allowed' });
   }
 
-  try {
-    const player = String((event.queryStringParameters || {}).player || '').trim();
+  const auth = verifyPlayerRequest(event);
+  if (!auth.ok) return jsonResponse(401, { ok: false, error: auth.error });
 
-    if (!player) {
-      return jsonResponse(400, { ok: false, error: 'Не вказано гравця' });
-    }
+  try {
+    const player = auth.payload.player;
 
     const data = await supabaseFetch('/rest/v1/rpc/player_cabinet', {
       method: 'POST',
@@ -20,6 +20,7 @@ exports.handler = async function (event) {
 
     return jsonResponse(200, {
       ok: true,
+      player,
       data: (data || []).map(row => ({
         match: row.match_name,
         startsAt: row.starts_at,
