@@ -386,6 +386,7 @@
   <script>
     const RATING_API_URL = '/.netlify/functions/rating';
     const SUBMIT_API_URL = '/.netlify/functions/submit-prediction';
+    const MATCHES_API_URL = '/.netlify/functions/available-matches';
 
     const PLAYERS = ['Курт', 'Діді', 'Равік', 'Туріст', 'Ронні', 'Рос', 'Раміно', 'Лоску', 'Микита'];
 
@@ -565,16 +566,25 @@
       }).format(date);
     }
 
-    function getUpcomingMatches(limit = 10) {
-      const now = new Date();
-
-      return MATCHES
-        .filter(item => new Date(item.startsAt) > now)
-        .sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt))
-        .slice(0, limit);
+    async function getUpcomingMatches(limit = 10) {
+      try {
+        const response = await fetch(`${MATCHES_API_URL}?limit=${encodeURIComponent(limit)}`, { cache: 'no-store' });
+        const result = await response.json();
+        if (!response.ok || !result || result.ok !== true) {
+          throw new Error(result && result.error ? result.error : 'Не вдалося завантажити матчі');
+        }
+        return Array.isArray(result.data) ? result.data : [];
+      } catch (error) {
+        console.warn('Fallback to static matches:', error);
+        const now = new Date();
+        return MATCHES
+          .filter(item => new Date(item.startsAt) > now)
+          .sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt))
+          .slice(0, limit);
+      }
     }
 
-    function populateForm() {
+    async function populateForm() {
       const matchSelect = document.getElementById('match-select');
       const playerSelect = document.getElementById('player-select');
 
@@ -586,7 +596,8 @@
         playerSelect.appendChild(option);
       });
 
-      const upcomingMatches = getUpcomingMatches(10);
+      setFormStatus('Завантажую доступні матчі...', '');
+      const upcomingMatches = await getUpcomingMatches(10);
       matchSelect.innerHTML = '<option value="">Обери матч</option>';
 
       if (upcomingMatches.length === 0) {
@@ -595,7 +606,7 @@
         option.textContent = 'Немає доступних матчів';
         matchSelect.appendChild(option);
         matchSelect.disabled = true;
-        setFormStatus('Немає доступних матчів для прогнозу.', 'error');
+        setFormStatus('Немає доступних матчів для прогнозу або прогнози вже опубліковані.', 'error');
         return;
       }
 
@@ -605,6 +616,8 @@
         option.textContent = `${formatMatchDate(item.startsAt)} — ${item.match}`;
         matchSelect.appendChild(option);
       });
+      matchSelect.disabled = false;
+      setFormStatus('У списку матчів показуються найближчі 10 матчів, де прогноз ще відкритий.', '');
     }
 
     function normalizeScoreInput(value) {
