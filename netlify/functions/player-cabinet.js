@@ -27,7 +27,8 @@ exports.handler = async function (event) {
         score: row.predicted_score,
         submittedAt: row.submitted_at,
         hasPrediction: Boolean(row.has_prediction),
-        editable: Boolean(row.editable)
+        editable: Boolean(row.editable),
+        lockReason: row.lock_reason || null
       }))
     });
   } catch (error) {
