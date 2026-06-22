@@ -9,16 +9,23 @@ exports.handler = async function (event) {
   if (!auth.ok) return jsonResponse(401, { ok: false, error: auth.error });
 
   try {
-    const data = await supabaseFetch('/rest/v1/matches?select=match_name,starts_at,home_score,away_score,actual_result&order=starts_at.asc.nullslast,match_name.asc');
+    const data = await supabaseFetch('/rest/v1/rpc/admin_matches_window', {
+      method: 'POST',
+      body: JSON.stringify({
+        p_past_limit: 5,
+        p_future_limit: 10
+      })
+    });
 
     return jsonResponse(200, {
       ok: true,
-      data: data.map(row => ({
+      data: (data || []).map(row => ({
         match: row.match_name,
         startsAt: row.starts_at,
         homeScore: row.home_score,
         awayScore: row.away_score,
-        result: row.actual_result
+        result: row.actual_result,
+        windowGroup: row.window_group
       }))
     });
   } catch (error) {
