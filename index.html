@@ -367,10 +367,10 @@
             <tr>
               <th>Місце</th>
               <th>Гравець</th>
-              <th class="number">Кількість ставок</th>
               <th class="number">Бали</th>
               <th class="number">Середня похибка</th>
               <th class="number">Похибка на різниці забитих та пропущених</th>
+              <th class="number">Кількість ставок</th>
             </tr>
           </thead>
           <tbody id="rating-body">
@@ -518,10 +518,10 @@
         tr.innerHTML = `
           <td class="rank"><span class="${getRankClass(rank)}">${rank}</span></td>
           <td class="player">${escapeHtml(item.player || '')}</td>
-          <td class="number">${formatNumber(item.bets)}</td>
           <td class="number">${formatNumber(item.points)}</td>
           <td class="number">${formatNumber(item.avgError)}</td>
           <td class="number">${formatNumber(item.diffError)}</td>
+          <td class="number">${formatNumber(item.bets)}</td>
         `;
         tbody.appendChild(tr);
       });
