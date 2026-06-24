@@ -50,13 +50,17 @@ async function supabaseFetch(path, options = {}) {
 }
 
 function formatKyivTime(value) {
+  // Supabase зберігає starts_at як UTC/timestamptz.
+  // Netlify виконує функції в UTC, тому обовʼязково форсуємо Europe/Kyiv,
+  // інакше в Telegram може показувати 01:00 замість 04:00.
   return new Intl.DateTimeFormat('uk-UA', {
     timeZone: 'Europe/Kyiv',
     day: '2-digit',
     month: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
-  }).format(new Date(value));
+    minute: '2-digit',
+    hour12: false
+  }).format(new Date(value)).replace(',', '');
 }
 
 function buildMessage(match, missingPlayers) {
