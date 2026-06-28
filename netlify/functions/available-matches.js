@@ -9,7 +9,9 @@ exports.handler = async function (event) {
   try {
     const params = new URLSearchParams(event.rawQuery || event.queryStringParameters || {});
     const limitRaw = params.get ? params.get('limit') : (event.queryStringParameters && event.queryStringParameters.limit);
-    const limit = Math.max(1, Math.min(Number(limitRaw || 10) || 10, 30));
+    // For playoffs the database function ignores the limit and returns the whole current stage.
+    // For non-playoff / fallback mode it still uses the limit.
+    const limit = Math.max(1, Math.min(Number(limitRaw || 10) || 10, 50));
 
     const data = await supabaseFetch('/rest/v1/rpc/available_matches_for_prediction', {
       method: 'POST',
