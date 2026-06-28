@@ -25,6 +25,9 @@ exports.handler = async function (event) {
         homeScore: row.home_score,
         awayScore: row.away_score,
         result: row.actual_result,
+        playoffMultiplier: row.playoff_multiplier,
+        stage: row.stage,
+        matchCode: row.match_code,
         windowGroup: row.window_group
       }))
     });
