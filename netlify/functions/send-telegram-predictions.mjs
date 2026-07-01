@@ -65,7 +65,7 @@ function formatKyivTime(value) {
 
 function buildMessage(match, predictions) {
   const lines = [];
-  lines.push('⏰ За 30 хв матч:');
+  lines.push('⏰ За 5 хв матч:');
   lines.push(match.match_name);
   lines.push('Початок: ' + formatKyivTime(match.starts_at));
   lines.push('');
@@ -121,7 +121,7 @@ async function sendTelegramMessage(text) {
 async function processDueMatches({ dryRun = false } = {}) {
   const dueMatches = await supabaseFetch('/rest/v1/rpc/telegram_due_matches', {
     method: 'POST',
-    body: JSON.stringify({ p_window_start_minutes: 25, p_window_end_minutes: 35 })
+    body: JSON.stringify({ p_window_start_minutes: 3, p_window_end_minutes: 7 })
   });
 
   const results = [];
@@ -168,7 +168,7 @@ export default async function handler(req) {
     const url = new URL(req.url);
     const dryRun = url.searchParams.get('dryRun') === '1' || url.searchParams.get('dryRun') === 'true';
     const results = await processDueMatches({ dryRun });
-    return jsonResponse(200, { ok: true, scheduledSyntax: 'esm_config', checkedAt: new Date().toISOString(), dueCount: results.length, results });
+    return jsonResponse(200, { ok: true, scheduledSyntax: 'esm_config', publishWindow: '3-7 minutes before match', checkedAt: new Date().toISOString(), dueCount: results.length, results });
   } catch (error) {
     return jsonResponse(500, { ok: false, error: error.message || String(error) });
   }
