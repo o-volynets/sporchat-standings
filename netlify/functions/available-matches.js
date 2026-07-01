@@ -1,63 +1,97 @@
-const { jsonResponse, supabaseFetch } = require('./_supabase');
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-function toKyivLabel(isoString) {
-  const date = new Date(isoString);
-  const parts = new Intl.DateTimeFormat('uk-UA', {
-    timeZone: 'Europe/Kyiv',
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hour12: false,
-  }).formatToParts(date).reduce((acc, part) => {
-    acc[part.type] = part.value;
-    return acc;
-  }, {});
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+  'Access-Control-Allow-Methods': 'GET, OPTIONS',
+};
 
-  return `${parts.day}.${parts.month}, ${parts.hour}:${parts.minute}`;
+function json(statusCode, body) {
+  return {
+    statusCode,
+    headers: {
+      ...corsHeaders,
+      'Content-Type': 'application/json; charset=utf-8',
+    },
+    body: JSON.stringify(body),
+  };
 }
 
-exports.handler = async function () {
+async function supabaseGet(path) {
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    throw new Error('Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY');
+  }
+
+  const response = await fetch(`${SUPABASE_URL}${path}`, {
+    method: 'GET',
+    headers: {
+      apikey: SUPABASE_SERVICE_ROLE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  const text = await response.text();
+  let data;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch (_) {
+    data = text;
+  }
+
+  if (!response.ok) {
+    throw new Error(`Supabase error ${response.status}: ${text}`);
+  }
+
+  return data;
+}
+
+exports.handler = async function handler(event) {
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 204, headers: corsHeaders, body: '' };
+  }
+
   try {
     const nowIso = new Date().toISOString();
 
-    // Беремо найближчі майбутні матчі з запасом, а потім фільтруємо ті,
-    // по яких прогнози вже опубліковані в Telegram.
-    const matches = await supabaseFetch(
-      `/rest/v1/matches?select=id,match_name,starts_at&starts_at=gt.${encodeURIComponent(nowIso)}&order=starts_at.asc&limit=60`
+    // 1) Беремо майбутні матчі напряму з таблиці matches.
+    // Не використовуємо складний PostgREST not-in фільтр, бо саме він часто дає порожній результат.
+    const matches = await supabaseGet(
+      `/rest/v1/matches?select=id,match_name,starts_at,home_score,away_score&starts_at=gt.${encodeURIComponent(nowIso)}&order=starts_at.asc&limit=100`
     );
 
-    if (!Array.isArray(matches) || matches.length === 0) {
-      return jsonResponse(200, { ok: true, matches: [] });
-    }
-
-    const ids = matches.map((m) => m.id);
-    const idList = ids.map((id) => `"${id}"`).join(',');
-
-    const sentNotifications = await supabaseFetch(
-      `/rest/v1/telegram_notifications?select=match_id&notification_type=eq.predictions_30m&status=eq.sent&match_id=in.(${encodeURIComponent(idList)})`
+    // 2) Окремо беремо матчі, по яких уже опубліковано всі прогнози в Telegram.
+    const notifications = await supabaseGet(
+      `/rest/v1/telegram_notifications?select=match_id&notification_type=eq.predictions_30m&status=eq.sent`
     );
 
-    const publishedMatchIds = new Set((sentNotifications || []).map((n) => n.match_id));
+    const publishedMatchIds = new Set((notifications || []).map((n) => n.match_id));
 
-    const available = matches
-      .filter((m) => !publishedMatchIds.has(m.id))
-      .map((m) => ({
-        id: m.id,
-        match_name: m.match_name,
-        starts_at: m.starts_at,
-        label: `${toKyivLabel(m.starts_at)} — ${m.match_name}`,
+    // 3) Фільтруємо в JS: показуємо тільки матчі, де прогнози ще НЕ опубліковані.
+    const availableMatches = (matches || [])
+      .filter((match) => !publishedMatchIds.has(match.id))
+      .map((match) => ({
+        // Даємо кілька назв полів для сумісності зі старим фронтом.
+        id: match.id,
+        match_id: match.id,
+        match_name: match.match_name,
+        name: match.match_name,
+        starts_at: match.starts_at,
+        home_score: match.home_score,
+        away_score: match.away_score,
       }));
 
-    return jsonResponse(200, {
+    return json(200, {
       ok: true,
-      count: available.length,
-      matches: available,
+      now: nowIso,
+      count: availableMatches.length,
+      matches: availableMatches,
     });
   } catch (error) {
-    return jsonResponse(500, {
+    return json(500, {
       ok: false,
-      error: error.message || 'Failed to load available matches',
+      error: error.message || String(error),
     });
   }
 };
