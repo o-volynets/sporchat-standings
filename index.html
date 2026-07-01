@@ -566,6 +566,16 @@
       }).format(date);
     }
 
+    function normalizeMatchItem(item) {
+      const startsAt = item.startsAt || item.starts_at || item.start_at || item.kickoff_at;
+      const match = item.match || item.match_name || item.name;
+      return {
+        ...item,
+        startsAt,
+        match
+      };
+    }
+
     async function getUpcomingMatches(limit = 10) {
       try {
         const response = await fetch(`${MATCHES_API_URL}?limit=${encodeURIComponent(limit)}`, { cache: 'no-store' });
@@ -573,7 +583,18 @@
         if (!response.ok || !result || result.ok !== true) {
           throw new Error(result && result.error ? result.error : 'Не вдалося завантажити матчі');
         }
-        return Array.isArray(result.data) ? result.data : [];
+
+        const rawMatches = Array.isArray(result.data)
+          ? result.data
+          : Array.isArray(result.matches)
+            ? result.matches
+            : [];
+
+        return rawMatches
+          .map(normalizeMatchItem)
+          .filter(item => item.match && item.startsAt)
+          .sort((a, b) => new Date(a.startsAt) - new Date(b.startsAt))
+          .slice(0, limit);
       } catch (error) {
         console.warn('Fallback to static matches:', error);
         const now = new Date();
