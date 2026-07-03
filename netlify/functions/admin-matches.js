@@ -25,13 +25,16 @@ exports.handler = async function (event) {
         homeScore: row.home_score,
         awayScore: row.away_score,
         result: row.actual_result,
-        playoffMultiplier: row.playoff_multiplier,
-        stage: row.stage,
-        matchCode: row.match_code,
-        windowGroup: row.window_group
+        windowGroup: row.window_group,
+        isPlayoff: row.is_playoff,
+        matchNo: row.match_no,
+        homeTeam: row.home_team,
+        awayTeam: row.away_team,
+        advancingTeam: row.advancing_team
       }))
     });
   } catch (error) {
     return jsonResponse(500, { ok: false, error: error.message || String(error) });
   }
+};
 };
