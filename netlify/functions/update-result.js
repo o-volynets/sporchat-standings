@@ -13,6 +13,7 @@ exports.handler = async function (event) {
     const match = String(body.match || '').trim();
     const score = String(body.score || '').trim();
     const multiplier = Number(body.playoffMultiplier || 1);
+    const advancingTeam = String(body.advancingTeam || '').trim();
 
     if (!match) return jsonResponse(400, { ok: false, error: 'Не обрано матч' });
     if (!/^\d+\s*-\s*\d+$/.test(score)) {
@@ -27,7 +28,8 @@ exports.handler = async function (event) {
         p_match: match,
         p_home_score: home,
         p_away_score: away,
-        p_playoff_multiplier: Number.isFinite(multiplier) && multiplier > 0 ? multiplier : 1
+        p_playoff_multiplier: Number.isFinite(multiplier) && multiplier > 0 ? multiplier : 1,
+        p_advancing_team: advancingTeam || null
       })
     });
 
