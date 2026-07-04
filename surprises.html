@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sportchat Predict — Рейтинг найнеочікуваніших матчів</title>
+  <style>
+    :root{--bg:#0f172a;--card:#111827;--card2:#1f2937;--text:#f9fafb;--muted:#9ca3af;--line:rgba(255,255,255,.12);--accent:#38bdf8;--success:#34d399;--danger:#f87171;--warning:#fbbf24}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top left,rgba(56,189,248,.18),transparent 30%),radial-gradient(circle at bottom right,rgba(34,197,94,.12),transparent 28%),var(--bg);color:var(--text)}
+    .page{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:32px 0 48px}.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:24px}h1{margin:0;font-size:clamp(30px,4vw,52px);line-height:1.05;letter-spacing:-.04em}.subtitle{margin:8px 0 0;color:var(--muted);font-size:16px}.nav{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 24px}.nav-link{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:999px;padding:10px 14px;color:var(--text);background:rgba(15,23,42,.7);text-decoration:none;font-weight:800;transition:.15s ease}.nav-link:hover{transform:translateY(-1px);border-color:rgba(56,189,248,.6)}.nav-link.active{background:linear-gradient(135deg,rgba(14,165,233,.6),rgba(34,197,94,.6));border-color:rgba(255,255,255,.18)}
+    .card{border:1px solid var(--line);background:rgba(17,24,39,.86);box-shadow:0 24px 80px rgba(0,0,0,.28);border-radius:22px;overflow:hidden}.card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line);background:rgba(31,41,55,.55);font-weight:900;font-size:20px}.card-body{padding:0}.status{color:var(--muted);font-weight:700;font-size:14px}.status.error{color:var(--danger)}.status.success{color:var(--success)}button{border:1px solid var(--line);border-radius:999px;padding:10px 14px;font-weight:900;color:#fff;cursor:pointer;background:rgba(15,23,42,.75)}button:hover{border-color:rgba(56,189,248,.6)}.formula{margin:0 0 18px;padding:14px 16px;border:1px solid var(--line);border-radius:18px;background:rgba(15,23,42,.6);color:var(--muted);line-height:1.55}.formula strong{color:var(--text)}code{color:#93c5fd}
+    table{width:100%;border-collapse:collapse}th,td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;background:rgba(15,23,42,.6)}td{font-size:15px}.rank{font-weight:900;color:#fff}.match{font-weight:900}.muted{color:var(--muted)}.number{font-variant-numeric:tabular-nums}.score{font-weight:900}.chip{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:800;color:#e5e7eb;background:rgba(255,255,255,.05)}.bar{height:9px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;min-width:110px}.bar span{display:block;height:100%;background:linear-gradient(90deg,#06b6d4,#22c55e)}.desktop-only{display:table-cell}.empty{padding:28px;color:var(--muted);font-weight:700}.top-note{margin-bottom:16px}
+    @media(max-width:760px){.hero{display:block}.card-header{display:block}.card-header button{margin-top:12px;width:100%}th,td{padding:12px 10px}.desktop-only{display:none}table{font-size:14px}.formula{font-size:14px}}
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="hero">
+      <div>
+        <h1>Неочікувані матчі</h1>
+        <p class="subtitle">Матчі, що вже відбулись, відсортовані за тим, наскільки результат відхилився від середнього прогнозу гравців.</p>
+      </div>
+    </section>
+
+    <nav class="nav">
+      <a class="nav-link" href="index.html">Рейтинг</a>
+      <a class="nav-link active" href="surprises.html">Неочікувані матчі</a>
+      <a class="nav-link" href="predictions.html">Не зроблені прогнози</a>
+      <a class="nav-link" href="personal-cabinet.html">Особистий кабінет</a>
+      <a class="nav-link" href="admin-results.html">Адмінка</a>
+    </nav>
+
+    <p class="formula top-note"><strong>Метрика з Excel:</strong> <code>√((середній прогноз першої - реальні голи першої)² + (середній прогноз другої - реальні голи другої)²)</code>. Чим вище число — тим більш неочікуваним був результат.</p>
+
+    <section class="card">
+      <div class="card-header">
+        <span>Рейтинг неочікуваності</span>
+        <div><span id="status" class="status">Завантажую...</span> <button type="button" onclick="loadSurprises()">Оновити</button></div>
+      </div>
+      <div class="card-body">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Дата</th>
+              <th>Матч</th>
+              <th>Рахунок</th>
+              <th class="desktop-only">Середній прогноз</th>
+              <th class="desktop-only">Прогнозів</th>
+              <th>Неочікуваність</th>
+              <th class="desktop-only">Розклад прогнозів</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"><tr><td class="empty" colspan="8">Завантаження...</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const statusEl=document.getElementById('status');
+    const bodyEl=document.getElementById('table-body');
+
+    function setStatus(msg,type=''){
+      statusEl.textContent=msg||'';
+      statusEl.className='status'+(type?' '+type:'');
+    }
+
+    function formatDate(v){
+      if(!v)return'Дата не вказана';
+      return new Intl.DateTimeFormat('uk-UA',{timeZone:'Europe/Kyiv',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(v));
+    }
+
+    function pct(v){
+      if(v===null||v===undefined||Number.isNaN(Number(v))) return '0%';
+      return `${Math.round(Number(v)*100)}%`;
+    }
+
+    function num(v,digits=2){
+      if(v===null||v===undefined||Number.isNaN(Number(v))) return '—';
+      return Number(v).toLocaleString('uk-UA',{minimumFractionDigits:digits,maximumFractionDigits:digits});
+    }
+
+    function resultLabel(r){
+      if(r==='П1')return 'перемога першої';
+      if(r==='П2')return 'перемога другої';
+      if(r==='Н')return 'нічия';
+      return r||'—';
+    }
+
+    function renderRows(rows){
+      if(!rows.length){
+        bodyEl.innerHTML='<tr><td class="empty" colspan="8">Поки немає завершених матчів з прогнозами.</td></tr>';
+        return;
+      }
+      const max=Math.max(...rows.map(r=>Number(r.unexpectedness||0)),1);
+      bodyEl.innerHTML=rows.map(row=>{
+        const width=Math.max(4,Math.round((Number(row.unexpectedness||0)/max)*100));
+        return `
+          <tr>
+            <td class="rank">${row.rank}</td>
+            <td class="muted number">${formatDate(row.startsAt)}</td>
+            <td><div class="match">${row.match}</div><div class="muted">${resultLabel(row.actualResult)}</div></td>
+            <td class="score number">${row.score||'—'}</td>
+            <td class="desktop-only number">${row.avgPredictedScore||'—'}</td>
+            <td class="desktop-only number">${row.predictionCount}</td>
+            <td><span class="chip number">${num(row.unexpectedness,2)}</span><div class="bar" aria-hidden="true"><span style="width:${width}%"></span></div></td>
+            <td class="desktop-only muted">П1 ${pct(row.pctP1)} · Н ${pct(row.pctDraw)} · П2 ${pct(row.pctP2)}</td>
+          </tr>`;
+      }).join('');
+    }
+
+    async function loadSurprises(){
+      setStatus('Завантажую...');
+      try{
+        const response=await fetch('/.netlify/functions/match-surprises');
+        const data=await response.json();
+        if(!response.ok||data.ok===false) throw new Error(data.error||'Помилка запиту');
+        renderRows(data.data||[]);
+        setStatus(`Завантажено матчів: ${(data.data||[]).length}`,'success');
+      }catch(e){
+        bodyEl.innerHTML='<tr><td class="empty" colspan="8">Не вдалося завантажити дані.</td></tr>';
+        setStatus(e.message||String(e),'error');
+      }
+    }
+
+    loadSurprises();
+  </script>
+</body>
+</html>
