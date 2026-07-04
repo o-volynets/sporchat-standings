@@ -6,11 +6,46 @@
   <title>Sportchat Predict — Неочікувані матчі</title>
   <style>
     :root{--bg:#0f172a;--card:#111827;--card2:#1f2937;--text:#f9fafb;--muted:#9ca3af;--line:rgba(255,255,255,.12);--accent:#38bdf8;--success:#34d399;--danger:#f87171;--warning:#fbbf24}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top left,rgba(56,189,248,.18),transparent 30%),radial-gradient(circle at bottom right,rgba(34,197,94,.12),transparent 28%),var(--bg);color:var(--text)}
-    .page{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:32px 0 48px}.hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:24px}h1{margin:0;font-size:clamp(30px,4vw,52px);line-height:1.05;letter-spacing:-.04em}.subtitle{margin:8px 0 0;color:var(--muted);font-size:16px}.nav{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 24px}.nav-link{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:999px;padding:10px 14px;color:var(--text);background:rgba(15,23,42,.7);text-decoration:none;font-weight:800;transition:.15s ease}.nav-link:hover{transform:translateY(-1px);border-color:rgba(56,189,248,.6)}.nav-link.active{background:linear-gradient(135deg,rgba(14,165,233,.6),rgba(34,197,94,.6));border-color:rgba(255,255,255,.18)}
-    .card{border:1px solid var(--line);background:rgba(17,24,39,.86);box-shadow:0 24px 80px rgba(0,0,0,.28);border-radius:22px;overflow:hidden}.card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line);background:rgba(31,41,55,.55);font-weight:900;font-size:20px}.card-body{padding:0}.status{color:var(--muted);font-weight:700;font-size:14px}.status.error{color:var(--danger)}.status.success{color:var(--success)}button{border:1px solid var(--line);border-radius:999px;padding:10px 14px;font-weight:900;color:#fff;cursor:pointer;background:rgba(15,23,42,.75)}button:hover{border-color:rgba(56,189,248,.6)}.formula{margin:0 0 18px;padding:14px 16px;border:1px solid var(--line);border-radius:18px;background:rgba(15,23,42,.6);color:var(--muted);line-height:1.55}.formula strong{color:var(--text)}code{color:#93c5fd}
-    table{width:100%;border-collapse:collapse}th,td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;background:rgba(15,23,42,.6)}td{font-size:15px}.rank{font-weight:900;color:#fff}.match{font-weight:900}.muted{color:var(--muted)}.number{font-variant-numeric:tabular-nums}.score{font-weight:900}.chip{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:800;color:#e5e7eb;background:rgba(255,255,255,.05)}.bar{height:9px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;min-width:110px}.bar span{display:block;height:100%;background:linear-gradient(90deg,#06b6d4,#22c55e)}.desktop-only{display:table-cell}.empty{padding:28px;color:var(--muted);font-weight:700}.top-note{margin-bottom:16px}
-    @media(max-width:760px){.hero{display:block}.card-header{display:block}.card-header button{margin-top:12px;width:100%}th,td{padding:12px 10px}.desktop-only{display:none}table{font-size:14px}.formula{font-size:14px}}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:radial-gradient(circle at top left,rgba(56,189,248,.18),transparent 30%),radial-gradient(circle at bottom right,rgba(34,197,94,.12),transparent 28%),var(--bg);color:var(--text)}
+    .page{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:32px 0 48px}
+    .hero{display:flex;justify-content:space-between;align-items:flex-end;gap:24px;margin-bottom:24px}
+    h1{margin:0;font-size:clamp(30px,4vw,52px);line-height:1.05;letter-spacing:-.04em}
+    .subtitle{margin:8px 0 0;color:var(--muted);font-size:16px;max-width:760px}
+    .nav{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 24px}
+    .nav-link{display:inline-flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:999px;padding:10px 14px;color:var(--text);background:rgba(15,23,42,.7);text-decoration:none;font-weight:800;transition:.15s ease}
+    .nav-link:hover{transform:translateY(-1px);border-color:rgba(56,189,248,.6)}
+    .nav-link.active{background:linear-gradient(135deg,rgba(14,165,233,.6),rgba(34,197,94,.6));border-color:rgba(255,255,255,.18)}
+    .card{border:1px solid var(--line);background:rgba(17,24,39,.86);box-shadow:0 24px 80px rgba(0,0,0,.28);border-radius:22px;overflow:hidden}
+    .card-header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px;border-bottom:1px solid var(--line);background:rgba(31,41,55,.55);font-weight:900;font-size:20px}
+    .card-body{padding:0}
+    .status{color:var(--muted);font-weight:700;font-size:14px}.status.error{color:var(--danger)}.status.success{color:var(--success)}
+    button{border:1px solid var(--line);border-radius:999px;padding:10px 14px;font-weight:900;color:#fff;cursor:pointer;background:rgba(15,23,42,.75)}
+    button:hover{border-color:rgba(56,189,248,.6)}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+    th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;background:rgba(15,23,42,.6)}
+    td{font-size:15px}.rank{font-weight:900;color:#fff}.match{font-weight:900}.muted{color:var(--muted)}.number{font-variant-numeric:tabular-nums}.score{font-weight:900}
+    .chip{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:800;color:#e5e7eb;background:rgba(255,255,255,.05)}
+    .bar{height:9px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;min-width:110px;margin-top:6px}.bar span{display:block;height:100%;background:linear-gradient(90deg,#06b6d4,#22c55e)}
+    .empty{padding:28px;color:var(--muted);font-weight:700}
+    .mobile-list{display:none;padding:14px;gap:12px}
+    .surprise-card{border:1px solid var(--line);border-radius:18px;background:rgba(15,23,42,.62);padding:14px}
+    .surprise-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .surprise-card-rank{width:34px;height:34px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-weight:950;background:rgba(255,255,255,.07);border:1px solid var(--line);flex:0 0 auto}
+    .surprise-card-title{font-size:18px;font-weight:950;line-height:1.12;letter-spacing:-.02em}
+    .surprise-card-date{color:var(--muted);font-size:13px;margin-top:5px}
+    .surprise-score{font-size:22px;font-weight:950;white-space:nowrap;text-align:right}
+    .metric-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+    .metric{border:1px solid var(--line);border-radius:14px;padding:10px;background:rgba(255,255,255,.035)}
+    .metric-label{display:block;color:var(--muted);font-size:12px;font-weight:800;margin-bottom:4px}.metric-value{font-weight:900}
+    .distribution{color:var(--muted);font-size:13px;line-height:1.45;margin-top:10px}
+    @media(max-width:760px){
+      .page{width:100%;padding:24px 12px 36px}.hero{display:block;margin-bottom:16px}h1{font-size:42px}.subtitle{font-size:17px;line-height:1.25}.nav{gap:10px;margin:18px 0}.nav-link{padding:11px 14px;font-size:16px}
+      .card{border-radius:20px}.card-header{display:block;padding:16px}.card-header button{margin-top:12px;width:100%}
+      .table-wrap{display:none}.mobile-list{display:grid}.empty{padding:18px}.status{display:block;margin-top:8px}
+    }
+    @media(min-width:761px){.table-wrap{display:block}}
   </style>
 </head>
 <body>
@@ -30,28 +65,30 @@
       <a class="nav-link" href="admin-results.html">Адмінка</a>
     </nav>
 
-
     <section class="card">
       <div class="card-header">
         <span>Рейтинг неочікуваності</span>
         <div><span id="status" class="status">Завантажую...</span> <button type="button" onclick="loadSurprises()">Оновити</button></div>
       </div>
       <div class="card-body">
-        <table>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Дата</th>
-              <th>Матч</th>
-              <th>Рахунок</th>
-              <th class="desktop-only">Середній прогноз</th>
-              <th class="desktop-only">Прогнозів</th>
-              <th>Неочікуваність</th>
-              <th class="desktop-only">Розклад прогнозів</th>
-            </tr>
-          </thead>
-          <tbody id="table-body"><tr><td class="empty" colspan="8">Завантаження...</td></tr></tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Дата</th>
+                <th>Матч</th>
+                <th>Рахунок</th>
+                <th>Середній прогноз</th>
+                <th>Прогнозів</th>
+                <th>Неочікуваність</th>
+                <th>Розклад прогнозів</th>
+              </tr>
+            </thead>
+            <tbody id="table-body"><tr><td class="empty" colspan="8">Завантаження...</td></tr></tbody>
+          </table>
+        </div>
+        <div id="mobile-list" class="mobile-list"><div class="empty">Завантаження...</div></div>
       </div>
     </section>
   </main>
@@ -59,6 +96,7 @@
   <script>
     const statusEl=document.getElementById('status');
     const bodyEl=document.getElementById('table-body');
+    const mobileListEl=document.getElementById('mobile-list');
 
     function setStatus(msg,type=''){
       statusEl.textContent=msg||'';
@@ -87,9 +125,14 @@
       return r||'—';
     }
 
+    function renderEmpty(message){
+      bodyEl.innerHTML=`<tr><td class="empty" colspan="8">${message}</td></tr>`;
+      mobileListEl.innerHTML=`<div class="empty">${message}</div>`;
+    }
+
     function renderRows(rows){
       if(!rows.length){
-        bodyEl.innerHTML='<tr><td class="empty" colspan="8">Поки немає завершених матчів з прогнозами.</td></tr>';
+        renderEmpty('Поки немає завершених матчів з прогнозами.');
         return;
       }
       const max=Math.max(...rows.map(r=>Number(r.unexpectedness||0)),1);
@@ -101,11 +144,34 @@
             <td class="muted number">${formatDate(row.startsAt)}</td>
             <td><div class="match">${row.match}</div><div class="muted">${resultLabel(row.actualResult)}</div></td>
             <td class="score number">${row.score||'—'}</td>
-            <td class="desktop-only number">${row.avgPredictedScore||'—'}</td>
-            <td class="desktop-only number">${row.predictionCount}</td>
+            <td class="number">${row.avgPredictedScore||'—'}</td>
+            <td class="number">${row.predictionCount}</td>
             <td><span class="chip number">${num(row.unexpectedness,2)}</span><div class="bar" aria-hidden="true"><span style="width:${width}%"></span></div></td>
-            <td class="desktop-only muted">П1 ${pct(row.pctP1)} · Н ${pct(row.pctDraw)} · П2 ${pct(row.pctP2)}</td>
+            <td class="muted">П1 ${pct(row.pctP1)} · Н ${pct(row.pctDraw)} · П2 ${pct(row.pctP2)}</td>
           </tr>`;
+      }).join('');
+
+      mobileListEl.innerHTML=rows.map(row=>{
+        const width=Math.max(4,Math.round((Number(row.unexpectedness||0)/max)*100));
+        return `
+          <article class="surprise-card">
+            <div class="surprise-card-head">
+              <div style="display:flex;gap:10px;min-width:0">
+                <div class="surprise-card-rank">${row.rank}</div>
+                <div style="min-width:0">
+                  <div class="surprise-card-title">${row.match}</div>
+                  <div class="surprise-card-date">${formatDate(row.startsAt)} · ${resultLabel(row.actualResult)}</div>
+                </div>
+              </div>
+              <div class="surprise-score number">${row.score||'—'}</div>
+            </div>
+            <div class="metric-row">
+              <div class="metric"><span class="metric-label">Неочікуваність</span><span class="metric-value number">${num(row.unexpectedness,2)}</span></div>
+              <div class="metric"><span class="metric-label">Середній прогноз</span><span class="metric-value number">${row.avgPredictedScore||'—'}</span></div>
+            </div>
+            <div class="bar" aria-hidden="true"><span style="width:${width}%"></span></div>
+            <div class="distribution">Прогнозів: <strong>${row.predictionCount}</strong><br>Розклад: П1 ${pct(row.pctP1)} · Н ${pct(row.pctDraw)} · П2 ${pct(row.pctP2)}</div>
+          </article>`;
       }).join('');
     }
 
@@ -118,7 +184,7 @@
         renderRows(data.data||[]);
         setStatus(`Завантажено матчів: ${(data.data||[]).length}`,'success');
       }catch(e){
-        bodyEl.innerHTML='<tr><td class="empty" colspan="8">Не вдалося завантажити дані.</td></tr>';
+        renderEmpty('Не вдалося завантажити дані.');
         setStatus(e.message||String(e),'error');
       }
     }
