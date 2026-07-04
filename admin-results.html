@@ -55,7 +55,14 @@
 
           <div>
             <label for="multiplier-input">Коефіцієнт плей-оф</label>
-            <input id="multiplier-input" type="number" min="1" step="1" value="1"/>
+            <select id="multiplier-input">
+              <option value="1">1 — груповий етап</option>
+              <option value="1.2">1.2</option>
+              <option value="1.5">1.5</option>
+              <option value="2">2</option>
+              <option value="2.5">2.5</option>
+              <option value="3">3</option>
+            </select>
             <div class="note">Для групового етапу залишай 1.</div>
           </div>
 
@@ -188,6 +195,15 @@
     function updateCurrentResult(){
       const item=selectedMatch();
       currentResult.innerHTML=item?formatResult(item):'';
+
+      const multiplierSelect=document.getElementById('multiplier-input');
+      if(item && item.playoffMultiplier!==null && item.playoffMultiplier!==undefined){
+        const value=String(Number(item.playoffMultiplier));
+        if([...multiplierSelect.options].some(o=>o.value===value)){
+          multiplierSelect.value=value;
+        }
+      }
+
       updateAdvancingVisibility();
     }
 
