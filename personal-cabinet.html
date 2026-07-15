@@ -20,12 +20,12 @@
     .user-pill{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:10px 14px;background:rgba(15,23,42,.65);font-weight:800}
     @media(max-width:760px){.hero{flex-direction:column;align-items:stretch}.grid{grid-template-columns:1fr}.page{width:min(100% - 20px,1100px);padding-top:20px}.nav-link{flex:1}}
   </style>
+  <link rel="stylesheet" href="site-shell.css" />
+  <script src="site-shell.js" defer></script>
 </head>
 <body>
   <main class="page">
     <section class="hero"><div><h1>Особистий кабінет</h1><p class="subtitle">Перегляд і редагування твоїх прогнозів до старту матчу</p></div><button id="logout-button" class="hidden" type="button">Вийти</button></section>
-    <nav class="nav"><a class="nav-link" href="index.html">Рейтинг</a><a class="nav-link" href="predictions.html">Не зроблені прогнози</a><a class="nav-link active" href="personal-cabinet.html">Особистий кабінет</a><a class="nav-link" href="admin-results.html">Адмінка</a></nav>
-
     <section id="login-card" class="card">
       <div class="card-header">Вхід гравця</div>
       <div class="card-body">
@@ -57,56 +57,19 @@
     const loginCard=document.getElementById('login-card'), cabinetCard=document.getElementById('cabinet-card'), logoutButton=document.getElementById('logout-button');
     const loginStatus=document.getElementById('login-status'), statusEl=document.getElementById('status'), matchSelect=document.getElementById('match-select'), scoreInput=document.getElementById('score-input'), saveButton=document.getElementById('save-button'), refreshButton=document.getElementById('refresh-button'), predictionInfo=document.getElementById('prediction-info'), playerName=document.getElementById('player-name');
     let cabinetRows=[];
-    function token(){return sessionStorage.getItem(TOKEN_KEY)} function setToken(t,p){sessionStorage.setItem(TOKEN_KEY,t);sessionStorage.setItem(PLAYER_KEY,p)} function clearToken(){sessionStorage.removeItem(TOKEN_KEY);sessionStorage.removeItem(PLAYER_KEY)}
+    function token(){return sessionStorage.getItem(TOKEN_KEY)}
+    function setToken(t,p){sessionStorage.setItem(TOKEN_KEY,t);sessionStorage.setItem(PLAYER_KEY,p);window.SportchatShell?.refreshAccount()}
+    function clearToken(){sessionStorage.removeItem(TOKEN_KEY);sessionStorage.removeItem(PLAYER_KEY);window.SportchatShell?.refreshAccount()}
     function setStatus(el,msg,type){el.textContent=msg||'';el.className='status'+(type?' '+type:'')}
     function showLogin(){loginCard.classList.remove('hidden');cabinetCard.classList.add('hidden');logoutButton.classList.add('hidden')}
     function showCabinet(){loginCard.classList.add('hidden');cabinetCard.classList.remove('hidden');logoutButton.classList.remove('hidden');playerName.textContent=sessionStorage.getItem(PLAYER_KEY)||'';loadCabinet()}
-    async function apiFetch(url,options={}){const response=await fetch(url,{...options,headers:{'Content-Type':'application/json',...(token()?{Authorization:'Bearer '+token()}:{}),...(options.headers||{})}});const data=await response.json();if(!response.ok||data.ok===false)throw new Error(data.error||'Помилка запиту');return data}
+    async function apiFetch(url,options={}){const response=await fetch(url,{...options,headers:{'Content-Type':'application/json',...(token()?{Authorization:'Bearer '+token()}:{}),...(options.headers||{})}});let data;try{data=await response.json()}catch(_){const error=new Error(response.ok?'Некоректна відповідь сервера.':`Сервер повернув помилку ${response.status}.`);error.status=response.status;throw error}if(!response.ok||data.ok===false){const error=new Error(data.error||'Помилка запиту');error.status=response.status;throw error}return data}
     async function login(){setStatus(loginStatus,'Перевіряю логін...','');try{const username=document.getElementById('username').value.trim();const password=document.getElementById('password').value;const data=await apiFetch('/.netlify/functions/player-login',{method:'POST',body:JSON.stringify({username,password})});setToken(data.token,data.player);showCabinet()}catch(e){setStatus(loginStatus,e.message,'error')}}
     function formatDate(v){if(!v)return'Дата не вказана';return new Intl.DateTimeFormat('uk-UA',{timeZone:'Europe/Kyiv',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(v))}
     function row(){return cabinetRows.find(r=>r.match===matchSelect.value)}
-    async function loadCabinet(){setStatus(statusEl,'Завантажую кабінет...','');try{const data=await apiFetch('/.netlify/functions/player-cabinet');cabinetRows=data.data||[];matchSelect.innerHTML='<option value="">Обери матч</option>';cabinetRows.forEach(r=>{const o=document.createElement('option');o.value=r.match;const flags=[];if(r.hasPrediction)flags.push('є прогноз');if(!r.editable)flags.push(r.lockReason==='published'?'закрито після публікації':(r.lockReason==='started'?'матч почався':'редагування закрито'));o.textContent=`${formatDate(r.startsAt)} — ${r.match}${flags.length?' · '+flags.join(', '):''}`;matchSelect.appendChild(o)});setStatus(statusEl,'Дані завантажено.','success');updateSelectedMatch()}catch(e){if(e.message.includes('token')||e.message.includes('session')||e.message.includes('Authorization')){clearToken();showLogin()}setStatus(statusEl,e.message,'error')}}
+    async function loadCabinet(){setStatus(statusEl,'Завантажую кабінет...','');try{const data=await apiFetch('/.netlify/functions/player-cabinet');cabinetRows=data.data||[];matchSelect.innerHTML='<option value="">Обери матч</option>';cabinetRows.forEach(r=>{const o=document.createElement('option');o.value=r.match;const flags=[];if(r.hasPrediction)flags.push('є прогноз');if(!r.editable)flags.push(r.lockReason==='published'?'закрито після публікації':(r.lockReason==='started'?'матч почався':'редагування закрито'));o.textContent=`${formatDate(r.startsAt)} — ${r.match}${flags.length?' · '+flags.join(', '):''}`;matchSelect.appendChild(o)});setStatus(statusEl,'Дані завантажено.','success');updateSelectedMatch()}catch(e){if(e.status===401||e.status===403){clearToken();showLogin()}setStatus(statusEl,e.message,'error')}}
     function updateSelectedMatch(){const r=row();scoreInput.value='';scoreInput.disabled=true;saveButton.disabled=true;predictionInfo.classList.add('hidden');if(!r)return;predictionInfo.classList.remove('hidden');const existing=r.hasPrediction?`<div>Твій поточний прогноз:</div><div class="score-big">${r.score}</div>`:'<div>На цей матч ще немає прогнозу.</div>';let edit;if(r.editable){edit='<div>Прогноз можна додати або змінити.</div>'}else if(r.lockReason==='published'){edit='<div>Прогнози на цей матч уже опубліковано в Telegram — редагування закрито.</div>'}else if(r.lockReason==='finished'){edit='<div>Матч уже завершено — редагування закрито.</div>'}else{edit='<div>Матч уже почався — прогноз доступний тільки для перегляду, редагування заблоковано.</div>'}predictionInfo.innerHTML=`${existing}<div>Початок: ${formatDate(r.startsAt)}</div>${edit}`;if(r.hasPrediction)scoreInput.value=r.score||'';if(r.editable){scoreInput.disabled=false;saveButton.disabled=false}}
     async function savePrediction(){const r=row();const score=scoreInput.value.trim();if(!r){setStatus(statusEl,'Обери матч.','error');return}if(!/^\d+\s*-\s*\d+$/.test(score)){setStatus(statusEl,'Рахунок має бути у форматі 0-0, 2-1, 4-3.','error');return}if(!r.editable){setStatus(statusEl,r.lockReason==='published'?'Прогнози на цей матч уже опубліковано в Telegram — редагування закрито.':'Редагування цього прогнозу заблоковано.','error');return}setStatus(statusEl,'Зберігаю прогноз...','');try{const result=await apiFetch('/.netlify/functions/submit-prediction',{method:'POST',body:JSON.stringify({match:r.match,score})});setStatus(statusEl,result.message||'Прогноз збережено.','success');await loadCabinet();matchSelect.value=r.match;updateSelectedMatch()}catch(e){setStatus(statusEl,e.message,'error')}}
-    document.getElementById('login-button').addEventListener('click',login);document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});logoutButton.addEventListener('click',()=>{clearToken();showLogin()});matchSelect.addEventListener('change',updateSelectedMatch);saveButton.addEventListener('click',savePrediction);refreshButton.addEventListener('click',loadCabinet);
-    if(token())showCabinet();else showLogin();
-  </script>
-</body>
-</html>
-        <div id="login-status" class="status"></div>
-      </div>
-    </section>
-
-    <section id="cabinet-card" class="card hidden">
-      <div class="card-header">Мої прогнози <span id="player-name" class="user-pill"></span></div>
-      <div class="card-body">
-        <div class="grid">
-          <div><label for="match-select">Матч</label><select id="match-select"><option value="">Завантаження...</option></select></div>
-          <div><label for="score-input">Рахунок</label><input id="score-input" placeholder="2-1" inputmode="text" pattern="[0-9]+-[0-9]+" maxlength="5" disabled /></div>
-        </div>
-        <div id="prediction-info" class="info-box hidden"></div>
-        <div class="actions"><button id="save-button" class="primary" type="button" disabled>Зберегти прогноз</button><button id="refresh-button" type="button">Оновити</button></div>
-        <div id="status" class="status"></div>
-      </div>
-    </section>
-  </main>
-
-  <script>
-    const TOKEN_KEY='sportchat_player_token'; const PLAYER_KEY='sportchat_player_name';
-    const loginCard=document.getElementById('login-card'), cabinetCard=document.getElementById('cabinet-card'), logoutButton=document.getElementById('logout-button');
-    const loginStatus=document.getElementById('login-status'), statusEl=document.getElementById('status'), matchSelect=document.getElementById('match-select'), scoreInput=document.getElementById('score-input'), saveButton=document.getElementById('save-button'), refreshButton=document.getElementById('refresh-button'), predictionInfo=document.getElementById('prediction-info'), playerName=document.getElementById('player-name');
-    let cabinetRows=[];
-    function token(){return sessionStorage.getItem(TOKEN_KEY)} function setToken(t,p){sessionStorage.setItem(TOKEN_KEY,t);sessionStorage.setItem(PLAYER_KEY,p)} function clearToken(){sessionStorage.removeItem(TOKEN_KEY);sessionStorage.removeItem(PLAYER_KEY)}
-    function setStatus(el,msg,type){el.textContent=msg||'';el.className='status'+(type?' '+type:'')}
-    function showLogin(){loginCard.classList.remove('hidden');cabinetCard.classList.add('hidden');logoutButton.classList.add('hidden')}
-    function showCabinet(){loginCard.classList.add('hidden');cabinetCard.classList.remove('hidden');logoutButton.classList.remove('hidden');playerName.textContent=sessionStorage.getItem(PLAYER_KEY)||'';loadCabinet()}
-    async function apiFetch(url,options={}){const response=await fetch(url,{...options,headers:{'Content-Type':'application/json',...(token()?{Authorization:'Bearer '+token()}:{}),...(options.headers||{})}});const data=await response.json();if(!response.ok||data.ok===false)throw new Error(data.error||'Помилка запиту');return data}
-    async function login(){setStatus(loginStatus,'Перевіряю логін...','');try{const username=document.getElementById('username').value.trim();const password=document.getElementById('password').value;const data=await apiFetch('/.netlify/functions/player-login',{method:'POST',body:JSON.stringify({username,password})});setToken(data.token,data.player);showCabinet()}catch(e){setStatus(loginStatus,e.message,'error')}}
-    function formatDate(v){if(!v)return'Дата не вказана';return new Intl.DateTimeFormat('uk-UA',{timeZone:'Europe/Kyiv',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date(v))}
-    function row(){return cabinetRows.find(r=>r.match===matchSelect.value)}
-    async function loadCabinet(){setStatus(statusEl,'Завантажую кабінет...','');try{const data=await apiFetch('/.netlify/functions/player-cabinet');cabinetRows=data.data||[];matchSelect.innerHTML='<option value="">Обери матч</option>';cabinetRows.forEach(r=>{const o=document.createElement('option');o.value=r.match;const flags=[];if(r.hasPrediction)flags.push('є прогноз');if(!r.editable)flags.push('матч почався');o.textContent=`${formatDate(r.startsAt)} — ${r.match}${flags.length?' · '+flags.join(', '):''}`;matchSelect.appendChild(o)});setStatus(statusEl,'Дані завантажено.','success');updateSelectedMatch()}catch(e){if(e.message.includes('token')||e.message.includes('session')||e.message.includes('Authorization')){clearToken();showLogin()}setStatus(statusEl,e.message,'error')}}
-    function updateSelectedMatch(){const r=row();scoreInput.value='';scoreInput.disabled=true;saveButton.disabled=true;predictionInfo.classList.add('hidden');if(!r)return;predictionInfo.classList.remove('hidden');const existing=r.hasPrediction?`<div>Твій поточний прогноз:</div><div class="score-big">${r.score}</div>`:'<div>На цей матч ще немає прогнозу.</div>';const edit=r.editable?'<div>Матч ще не почався — прогноз можна додати або змінити.</div>':'<div>Матч уже почався — прогноз доступний тільки для перегляду, редагування заблоковано.</div>';predictionInfo.innerHTML=`${existing}<div>Початок: ${formatDate(r.startsAt)}</div>${edit}`;if(r.hasPrediction)scoreInput.value=r.score||'';if(r.editable){scoreInput.disabled=false;saveButton.disabled=false}}
-    async function savePrediction(){const r=row();const score=scoreInput.value.trim();if(!r){setStatus(statusEl,'Обери матч.','error');return}if(!/^\d+\s*-\s*\d+$/.test(score)){setStatus(statusEl,'Рахунок має бути у форматі 0-0, 2-1, 4-3.','error');return}if(!r.editable){setStatus(statusEl,'Матч уже почався, редагування заблоковано.','error');return}setStatus(statusEl,'Зберігаю прогноз...','');try{const result=await apiFetch('/.netlify/functions/submit-prediction',{method:'POST',body:JSON.stringify({match:r.match,score})});setStatus(statusEl,result.message||'Прогноз збережено.','success');await loadCabinet();matchSelect.value=r.match;updateSelectedMatch()}catch(e){setStatus(statusEl,e.message,'error')}}
     document.getElementById('login-button').addEventListener('click',login);document.getElementById('password').addEventListener('keydown',e=>{if(e.key==='Enter')login()});logoutButton.addEventListener('click',()=>{clearToken();showLogin()});matchSelect.addEventListener('change',updateSelectedMatch);saveButton.addEventListener('click',savePrediction);refreshButton.addEventListener('click',loadCabinet);
     if(token())showCabinet();else showLogin();
   </script>
