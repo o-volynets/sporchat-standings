@@ -33,6 +33,8 @@ exports.handler = async function (event) {
         pctP1: row.pct_p1 === null ? null : Number(row.pct_p1),
         pctDraw: row.pct_draw === null ? null : Number(row.pct_draw),
         pctP2: row.pct_p2 === null ? null : Number(row.pct_p2),
+        scoreDistance: row.score_distance === null ? null : Number(row.score_distance),
+        outcomeSurprise: row.outcome_surprise === null ? null : Number(row.outcome_surprise),
         unexpectedness: row.unexpectedness === null ? null : Number(row.unexpectedness)
       }))
     });
