@@ -25,7 +25,7 @@
     table{width:100%;border-collapse:collapse}
     th,td{padding:14px 16px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
     th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;background:rgba(15,23,42,.6)}
-    td{font-size:15px}.rank{font-weight:900;color:#fff}.match{font-weight:900}.winner{font-weight:950;color:#fff}.muted{color:var(--muted)}.number{font-variant-numeric:tabular-nums}.score{font-weight:900}
+    td{font-size:15px}.rank{font-weight:900;color:#fff}.match{font-weight:500;color:var(--muted)}.winner{font-weight:950;color:var(--text)}.muted{color:var(--muted)}.number{font-variant-numeric:tabular-nums}.score{font-weight:900}
     .chip{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:12px;font-weight:800;color:#e5e7eb;background:rgba(255,255,255,.05)}
     .bar{height:9px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;min-width:110px;margin-top:6px}.bar span{display:block;height:100%;background:linear-gradient(90deg,#06b6d4,#22c55e)}
     .empty{padding:28px;color:var(--muted);font-weight:700}
@@ -33,7 +33,7 @@
     .surprise-card{border:1px solid var(--line);border-radius:18px;background:rgba(15,23,42,.62);padding:14px}
     .surprise-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
     .surprise-card-rank{width:34px;height:34px;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-weight:950;background:rgba(255,255,255,.07);border:1px solid var(--line);flex:0 0 auto}
-    .surprise-card-title{font-size:18px;font-weight:950;line-height:1.12;letter-spacing:-.02em}
+    .surprise-card-title{font-size:18px;font-weight:500;color:var(--muted);line-height:1.12;letter-spacing:-.02em}
     .surprise-card-date{color:var(--muted);font-size:13px;margin-top:5px}
     .surprise-score{font-size:22px;font-weight:950;white-space:nowrap;text-align:right}
     .metric-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
@@ -53,7 +53,7 @@
     <section class="hero">
       <div>
         <h1>Неочікувані матчі</h1>
-        <p class="subtitle">Матчі, що вже відбулись, відсортовані за тим, наскільки результат відхилився від середнього прогнозу гравців.</p>
+        <p class="subtitle">Матчі, що вже відбулись, відсортовані за відхиленням рахунку від середнього прогнозу та рідкістю правильного результату П1/Н/П2.</p>
       </div>
     </section>
 
@@ -145,6 +145,7 @@
       const max=Math.max(...rows.map(r=>Number(r.unexpectedness||0)),1);
       bodyEl.innerHTML=rows.map(row=>{
         const width=Math.max(4,Math.round((Number(row.unexpectedness||0)/max)*100));
+        const formulaHint=`Базове відхилення: ${num(row.scoreDistance,2)}; рідкість результату: ${pct(row.outcomeSurprise)}`;
         return `
           <tr>
             <td class="rank">${row.rank}</td>
@@ -152,13 +153,14 @@
             <td><div class="match">${renderMatch(row)}</div></td>
             <td class="score number">${row.score||'—'}</td>
             <td class="number">${row.avgPredictedScore||'—'}</td>
-            <td><span class="chip number">${num(row.unexpectedness,2)}</span><div class="bar" aria-hidden="true"><span style="width:${width}%"></span></div></td>
+            <td><span class="chip number" title="${escapeHtml(formulaHint)}">${num(row.unexpectedness,2)}</span><div class="bar" aria-hidden="true"><span style="width:${width}%"></span></div></td>
             <td class="muted">П1 ${pct(row.pctP1)} · Н ${pct(row.pctDraw)} · П2 ${pct(row.pctP2)}</td>
           </tr>`;
       }).join('');
 
       mobileListEl.innerHTML=rows.map(row=>{
         const width=Math.max(4,Math.round((Number(row.unexpectedness||0)/max)*100));
+        const formulaHint=`Базове відхилення: ${num(row.scoreDistance,2)}; рідкість результату: ${pct(row.outcomeSurprise)}`;
         return `
           <article class="surprise-card">
             <div class="surprise-card-head">
@@ -172,7 +174,7 @@
               <div class="surprise-score number">${row.score||'—'}</div>
             </div>
             <div class="metric-row">
-              <div class="metric"><span class="metric-label">Неочікуваність</span><span class="metric-value number">${num(row.unexpectedness,2)}</span></div>
+              <div class="metric" title="${escapeHtml(formulaHint)}"><span class="metric-label">Неочікуваність</span><span class="metric-value number">${num(row.unexpectedness,2)}</span></div>
               <div class="metric"><span class="metric-label">Середній прогноз</span><span class="metric-value number">${row.avgPredictedScore||'—'}</span></div>
             </div>
             <div class="bar" aria-hidden="true"><span style="width:${width}%"></span></div>
