@@ -17,8 +17,13 @@ exports.handler = async function (event) {
       data: (data || []).map(row => ({
         rank: Number(row.rank || 0),
         match: row.match_name,
+        teamHome: row.team_home,
+        teamAway: row.team_away,
         startsAt: row.starts_at,
+        stageLabel: row.stage_label,
         score: row.score,
+        homeScore: row.home_score === null ? null : Number(row.home_score),
+        awayScore: row.away_score === null ? null : Number(row.away_score),
         actualResult: row.actual_result,
         playoffMultiplier: Number(row.playoff_multiplier || 1),
         predictionCount: Number(row.prediction_count || 0),
